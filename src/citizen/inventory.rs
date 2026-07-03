@@ -1,0 +1,293 @@
+//! Shape citizen inventory: registers every shape class and constructor with
+//! the linker and provides the conformance fixtures that exercise them.
+
+use std::sync::Arc;
+
+use sim_kernel::{Cx, Error, Expr, Linker, ObjectEncoding, Result, Symbol, Value};
+
+use crate::{
+    AcceptOnNoDiagnosticsHook, AnyShape, DiscardOnDiagnosticPrefixHook, ExactExprShape, ExprKind,
+    OrStrategy, ScoreFloorHook, TableExtraPolicy, TableFieldSpec, TraceMarkHook, VennShapeSet,
+    hook_value,
+};
+
+use super::construct::{
+    and_shape_value, any_shape_value, class_shape_value, construct_accept_on_no_diagnostics_hook,
+    construct_and_shape, construct_any_shape, construct_class_shape,
+    construct_discard_on_diagnostic_prefix_hook, construct_exact_expr_shape,
+    construct_expr_kind_shape, construct_hooked_shape, construct_list_shape, construct_not_shape,
+    construct_or_shape, construct_repeat_shape, construct_score_floor_hook, construct_table_shape,
+    construct_trace_mark_hook, construct_venn_shape_set, exact_expr_shape_value,
+    expr_kind_shape_value, hooked_shape_value, list_shape_value, not_shape_value, or_shape_value,
+    repeat_shape_value, table_shape_value,
+};
+use super::{
+    and_shape_class_symbol, any_shape_class_symbol, class_shape_class_symbol,
+    exact_expr_shape_class_symbol, expr_kind_shape_class_symbol, hooked_shape_class_symbol,
+    list_shape_class_symbol, not_shape_class_symbol, or_shape_class_symbol,
+    register_shape_citizen_class, repeat_shape_class_symbol, table_shape_class_symbol,
+    venn_shape_set_class_symbol,
+};
+
+fn shape_fixture_wrong_version(cx: &mut Cx, value: Value) -> Result<()> {
+    let Some(encoder) = value.object().as_object_encoder() else {
+        return Err(Error::Eval("fixture has no object encoder".to_owned()));
+    };
+    let ObjectEncoding::Constructor { mut args, .. } = encoder.object_encoding(cx)? else {
+        return Err(Error::Eval(
+            "shape fixture expected constructor encoding".to_owned(),
+        ));
+    };
+    args[0] = Expr::Symbol(Symbol::new("v999999"));
+    sim_citizen::check_value_fixture_with_wrong_version(cx, value, Some(args))
+}
+
+fn conformance_any_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, any_shape_value())
+}
+
+fn conformance_exact_expr_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, exact_expr_shape_value(Expr::Bool(true)))
+}
+
+fn conformance_expr_kind_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, expr_kind_shape_value(ExprKind::Number))
+}
+
+fn conformance_class_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, class_shape_value(any_shape_class_symbol()))
+}
+
+fn conformance_list_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, list_shape_value(vec![Arc::new(AnyShape)], None)?)
+}
+
+fn conformance_table_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(
+        cx,
+        table_shape_value(
+            vec![TableFieldSpec {
+                key: Symbol::new("ok"),
+                required: true,
+                shape: Arc::new(AnyShape),
+            }],
+            TableExtraPolicy::Reject,
+        )?,
+    )
+}
+
+fn conformance_or_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(
+        cx,
+        or_shape_value(
+            vec![
+                Arc::new(ExactExprShape::new(Expr::Bool(false))),
+                Arc::new(ExactExprShape::new(Expr::Bool(true))),
+            ],
+            OrStrategy::FirstMatch,
+        )?,
+    )
+}
+
+fn conformance_and_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(
+        cx,
+        and_shape_value(vec![
+            Arc::new(AnyShape),
+            Arc::new(ExactExprShape::new(Expr::Bool(true))),
+        ])?,
+    )
+}
+
+fn conformance_not_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(
+        cx,
+        not_shape_value(Arc::new(ExactExprShape::new(Expr::Bool(false))))?,
+    )
+}
+
+fn conformance_repeat_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, repeat_shape_value(Arc::new(AnyShape), 1, Some(2))?)
+}
+
+fn conformance_hooked_shape(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(
+        cx,
+        hooked_shape_value(Arc::new(AnyShape), vec![Arc::new(TraceMarkHook)])?,
+    )
+}
+
+fn conformance_trace_mark_hook(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, hook_value(Arc::new(TraceMarkHook)))
+}
+
+fn conformance_score_floor_hook(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, hook_value(Arc::new(ScoreFloorHook::new(42))))
+}
+
+fn conformance_accept_on_no_diagnostics_hook(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, hook_value(Arc::new(AcceptOnNoDiagnosticsHook)))
+}
+
+fn conformance_discard_on_diagnostic_prefix_hook(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(
+        cx,
+        hook_value(Arc::new(DiscardOnDiagnosticPrefixHook::new("shape-table:"))),
+    )
+}
+
+fn conformance_venn_shape_set(cx: &mut Cx) -> Result<()> {
+    let value = cx.factory().opaque(Arc::new(VennShapeSet::new(vec![(
+        Symbol::new("any"),
+        Arc::new(AnyShape),
+    )])))?;
+    shape_fixture_wrong_version(cx, value)
+}
+
+macro_rules! register_shape_citizen {
+    ($install:ident, $conformance:ident, $symbol_text:literal, $symbol:expr, $arity:expr, $construct:ident) => {
+        fn $install(linker: &mut Linker<'_>) -> Result<()> {
+            register_shape_citizen_class(linker, $symbol, $construct)
+        }
+
+        sim_citizen::inventory::submit! {
+            sim_citizen::CitizenInfo {
+                symbol: $symbol_text,
+                version: 1,
+                crate_name: env!("CARGO_PKG_NAME"),
+                arity: $arity,
+                install: $install,
+                conformance: $conformance,
+            }
+        }
+    };
+}
+
+register_shape_citizen!(
+    install_any_shape_citizen,
+    conformance_any_shape,
+    "shape/Any",
+    any_shape_class_symbol(),
+    0,
+    construct_any_shape
+);
+register_shape_citizen!(
+    install_exact_expr_shape_citizen,
+    conformance_exact_expr_shape,
+    "shape/ExactExpr",
+    exact_expr_shape_class_symbol(),
+    1,
+    construct_exact_expr_shape
+);
+register_shape_citizen!(
+    install_expr_kind_shape_citizen,
+    conformance_expr_kind_shape,
+    "shape/ExprKind",
+    expr_kind_shape_class_symbol(),
+    1,
+    construct_expr_kind_shape
+);
+register_shape_citizen!(
+    install_class_shape_citizen,
+    conformance_class_shape,
+    "shape/Class",
+    class_shape_class_symbol(),
+    1,
+    construct_class_shape
+);
+register_shape_citizen!(
+    install_list_shape_citizen,
+    conformance_list_shape,
+    "shape/List",
+    list_shape_class_symbol(),
+    2,
+    construct_list_shape
+);
+register_shape_citizen!(
+    install_table_shape_citizen,
+    conformance_table_shape,
+    "shape/Table",
+    table_shape_class_symbol(),
+    2,
+    construct_table_shape
+);
+register_shape_citizen!(
+    install_or_shape_citizen,
+    conformance_or_shape,
+    "shape/Or",
+    or_shape_class_symbol(),
+    2,
+    construct_or_shape
+);
+register_shape_citizen!(
+    install_and_shape_citizen,
+    conformance_and_shape,
+    "shape/And",
+    and_shape_class_symbol(),
+    1,
+    construct_and_shape
+);
+register_shape_citizen!(
+    install_not_shape_citizen,
+    conformance_not_shape,
+    "shape/Not",
+    not_shape_class_symbol(),
+    1,
+    construct_not_shape
+);
+register_shape_citizen!(
+    install_repeat_shape_citizen,
+    conformance_repeat_shape,
+    "shape/Repeat",
+    repeat_shape_class_symbol(),
+    3,
+    construct_repeat_shape
+);
+register_shape_citizen!(
+    install_hooked_shape_citizen,
+    conformance_hooked_shape,
+    "shape/Hooked",
+    hooked_shape_class_symbol(),
+    2,
+    construct_hooked_shape
+);
+register_shape_citizen!(
+    install_trace_mark_hook_citizen,
+    conformance_trace_mark_hook,
+    "shape/TraceMarkHook",
+    crate::trace_mark_hook_class_symbol(),
+    0,
+    construct_trace_mark_hook
+);
+register_shape_citizen!(
+    install_score_floor_hook_citizen,
+    conformance_score_floor_hook,
+    "shape/ScoreFloorHook",
+    crate::score_floor_hook_class_symbol(),
+    1,
+    construct_score_floor_hook
+);
+register_shape_citizen!(
+    install_accept_on_no_diagnostics_hook_citizen,
+    conformance_accept_on_no_diagnostics_hook,
+    "shape/AcceptOnNoDiagnosticsHook",
+    crate::accept_on_no_diagnostics_hook_class_symbol(),
+    0,
+    construct_accept_on_no_diagnostics_hook
+);
+register_shape_citizen!(
+    install_discard_on_diagnostic_prefix_hook_citizen,
+    conformance_discard_on_diagnostic_prefix_hook,
+    "shape/DiscardOnDiagnosticPrefixHook",
+    crate::discard_on_diagnostic_prefix_hook_class_symbol(),
+    1,
+    construct_discard_on_diagnostic_prefix_hook
+);
+register_shape_citizen!(
+    install_venn_shape_set_citizen,
+    conformance_venn_shape_set,
+    "shape/Venn",
+    venn_shape_set_class_symbol(),
+    1,
+    construct_venn_shape_set
+);

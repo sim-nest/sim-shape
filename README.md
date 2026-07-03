@@ -1,0 +1,62 @@
+# sim-shape
+
+sim-shape is a package in the SIM constellation. The kernel owns the open
+`Shape` protocol; this crate supplies the concrete shapes and the one shared
+match, bind, and dispatch engine built on it. A shape both checks an expression
+or value and reports what it captured, so the same engine serves parsing,
+checking, binding, dispatch, codec grammar, lambda locals, and overload
+selection.
+
+The engine spans atomic shapes and their combinators and object-grammar parsers
+(primitives), boolean and collection algebra (algebra), comparison and
+subsumption reasoning (compare), citizen integration that registers shapes as
+constructible objects (citizen), the callable shape object with overload
+selection (functions), and match-extension hooks (hooks).
+
+## Crates
+
+- `sim-shape` -- concrete `Shape` implementations and the shared match, bind,
+  and dispatch engine: primitive shapes, shape algebra, comparison and
+  subsumption, citizen integration, callable shape objects, and match hooks.
+
+## Validation
+
+These commands run in the constellation workspace; only `sim-kernel` builds from a lone clone today (see `DEVELOPING.md` in `sim-sdk`). A single-repo build lands with the first crates.io publish.
+
+```bash
+cargo fmt --check && cargo test --workspace && cargo clippy --workspace -- -D warnings && cargo doc --workspace --no-deps
+cargo run -p xtask -- simdoc --check
+```
+
+## Documentation Lanes
+
+`cargo run -p xtask -- simdoc` builds the public documentation lanes:
+
+- API docs: `target/doc/`
+- Agent cards: `docs/agents/cards.jsonl` and `docs/agents/card-index.json`
+- Human docs: `docs/humans/`
+- Diagrams: `docs/diagrams/src/` and `docs/diagrams/generated/`
+
+The same command writes split contract files under `docs/generated/`. Everything
+under `docs/` is generated; do not hand-edit it.
+
+### Rustdoc conventions
+
+Public API documentation in `src/` follows one house style:
+
+- Every public item opens with a one-line summary sentence, then context.
+- The kernel defines the `Shape` protocol; this crate implements it as the one
+  shared engine, so each surface (primitives, algebra, compare, citizen,
+  functions, hooks) is framed by its role in that engine.
+- The first-reach types carry a `# Examples` doctest that compiles and passes.
+- Cross-reference with intra-doc links, and link back to this README rather than
+  restating it.
+
+The public API is documentation-gated: `lib.rs` denies `missing_docs`, so every
+public item, field, and variant must be documented for the crate to build.
+
+### Examples and recipes
+
+The crate's examples are its rustdoc doctests. sim-shape ships no `recipes/`
+tree; recipes that exercise shapes end to end live in the crates that load a
+codec and a runtime to evaluate them.
