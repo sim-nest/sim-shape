@@ -1,6 +1,36 @@
 # sim-shape
 
-sim-shape is a package in the SIM constellation. The kernel owns the open
+sim-shape tells you whether a value or expression fits a pattern you describe --
+and reports what it matched when it does.
+
+SIM is a small Rust protocol kernel plus loadable libraries (not a Lisp
+runtime); the `sim` CLI installs with `cargo install sim-run`, and sim-say is
+the full walkthrough. sim-shape is a library.
+
+## Example
+
+```bash
+cargo add sim-shape
+```
+
+```rust
+use std::sync::Arc;
+use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
+use sim_shape::{ExactExprShape, Shape};
+
+let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+let shape = ExactExprShape::new(Expr::Bool(true));
+assert!(shape.check_expr(&mut cx, &Expr::Bool(true)).unwrap().accepted);
+assert!(!shape.check_expr(&mut cx, &Expr::Bool(false)).unwrap().accepted);
+```
+
+`ExactExprShape` accepts only the expression it was built from: the first
+`check_expr` is `accepted`, the second is not. (From the passing doctest in
+`src/primitives/atomic.rs:319`.)
+
+## How it works
+
+The kernel owns the open
 `Shape` protocol; this crate supplies the concrete shapes and the one shared
 match, bind, and dispatch engine built on it. A shape both checks an expression
 or value and reports what it captured, so the same engine serves parsing,
