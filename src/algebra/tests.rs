@@ -3,8 +3,9 @@ use std::sync::Arc;
 use sim_kernel::{Cx, Expr, NumberLiteral, Symbol};
 
 use crate::{
-    AndShape, AnyShape, CaptureShape, ExactExprShape, ExprKind, ExprKindShape, NotShape, OrShape,
-    OrStrategy, RepeatShape, Shape, TableExtraPolicy, TableFieldSpec, TableShape,
+    AndShape, AnyShape, CaptureShape, ExactExprShape, ExprKind, ExprKindShape, NotShape,
+    OptionFieldSpec, OrShape, OrStrategy, RepeatShape, Shape, TableExtraPolicy, TableFieldSpec,
+    TableShape, check_option_map,
 };
 
 use sim_kernel::testing::bare_cx as cx;
@@ -273,6 +274,70 @@ fn table_shape_checks_extra_values_under_shape_policy() {
     let matched = shape.check_value(&mut cx, table).unwrap();
 
     assert!(matched.accepted);
+}
+
+#[test]
+fn option_map_check_reuses_table_shape_contract() {
+    let mut cx = cx();
+    let expr = Expr::Map(vec![
+        (
+            Expr::Symbol(Symbol::new("model")),
+            Expr::String("local".to_owned()),
+        ),
+        (Expr::Symbol(Symbol::new("trace")), Expr::Bool(true)),
+    ]);
+
+    let matched = check_option_map(
+        &mut cx,
+        &expr,
+        vec![
+            OptionFieldSpec::required(
+                Symbol::new("model"),
+                Arc::new(ExprKindShape::new(ExprKind::String)),
+            ),
+            OptionFieldSpec::optional(
+                Symbol::new("trace"),
+                Arc::new(ExprKindShape::new(ExprKind::Bool)),
+            ),
+        ],
+        TableExtraPolicy::Reject,
+    )
+    .unwrap();
+
+    assert!(matched.accepted);
+}
+
+#[test]
+fn option_map_check_reports_missing_and_extra_keys() {
+    let mut cx = cx();
+    let missing = check_option_map(
+        &mut cx,
+        &Expr::Map(Vec::new()),
+        vec![OptionFieldSpec::required(
+            Symbol::new("model"),
+            Arc::new(AnyShape),
+        )],
+        TableExtraPolicy::Allow,
+    )
+    .unwrap();
+    assert!(!missing.accepted);
+    assert_eq!(missing.diagnostics[0].message, "shape-table: missing keys");
+
+    let extra = check_option_map(
+        &mut cx,
+        &Expr::Map(vec![(
+            Expr::Symbol(Symbol::new("unknown")),
+            Expr::String("value".to_owned()),
+        )]),
+        Vec::new(),
+        TableExtraPolicy::Reject,
+    )
+    .unwrap();
+    assert!(!extra.accepted);
+    assert_eq!(
+        extra.diagnostics[0].message,
+        "shape-table: extra key unknown"
+    );
 }
 
 #[test]

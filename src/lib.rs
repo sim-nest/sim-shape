@@ -66,6 +66,7 @@ mod compare;
 mod diagnostics;
 mod functions;
 mod hooks;
+mod options;
 mod parse;
 #[cfg(test)]
 mod parse_tests;
@@ -108,6 +109,7 @@ pub use hooks::{
     discard_on_diagnostic_prefix_hook_class_symbol, hook_ref_arc, hook_value,
     score_floor_hook_class_symbol, trace_mark_hook_class_symbol,
 };
+pub use options::{OptionFieldSpec, check_option_map};
 pub use parse::{check_shape_on_expr, check_shape_on_value, parse_shape_expr, shape_error};
 pub use primitives::{
     AnyShape, CaptureShape, ClassShape, EffectfulShape, ExactExprShape, ExprKindShape, FieldShape,
