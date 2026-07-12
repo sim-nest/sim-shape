@@ -6,6 +6,9 @@ use std::sync::Arc;
 use sim_kernel::{Cx, Error, Expr, Result, ShapeId, Symbol, Value};
 
 use crate::ExprKind;
+use crate::algebra::{
+    AndShape, NotShape, OrShape, RepeatShape, TableExtraPolicy, TableFieldSpec, TableShape,
+};
 use crate::base::{Shape, ShapeMatch};
 use crate::primitives::{
     AnyShape, CaptureShape, ClassShape, ExprKindShape, FieldShape, FieldSpec, ListShape,
@@ -18,8 +21,11 @@ use crate::primitives::{
 /// `Bool`, `Symbol`, `Map`, `List`, `Nil`, and the `core` `Number` value
 /// shape); any other symbol becomes a [`ClassShape`] for that class. Lists
 /// drive the combinator grammar: `(capture name Shape)` wraps a shape in a
-/// [`CaptureShape`], `(fields ...)` builds an anonymous [`FieldShape`], and any
-/// other list becomes a [`ListShape`] over its parsed items.
+/// [`CaptureShape`], `(fields ...)` builds an anonymous [`FieldShape`],
+/// `(and ...)`/`(or ...)`/`(not ...)` build boolean algebra, `(list-rest ...)`
+/// and `(repeat...)` build collection algebra, `(table-open ...)` and
+/// `(table-closed ...)` build table algebra, and any other list becomes a
+/// [`ListShape`] over its parsed items.
 ///
 /// This is parser behavior layered on the kernel `Shape` protocol; the kernel
 /// owns the protocol, this function owns the concrete grammar.
@@ -70,37 +76,202 @@ pub fn parse_shape_expr(expr: &Expr) -> Result<Arc<dyn Shape>> {
 
 fn parse_shape_list(items: &[Expr]) -> Result<Arc<dyn Shape>> {
     let Some(Expr::Symbol(head)) = items.first() else {
-        let items = items
-            .iter()
-            .map(parse_shape_expr)
-            .collect::<Result<Vec<_>>>()?;
-        return Ok(Arc::new(ListShape::new(items)));
+        return parse_tuple_shape(items);
     };
 
-    if head.namespace.is_none() && head.name.as_ref() == "capture" && items.len() == 3 {
-        let Expr::Symbol(name) = &items[1] else {
-            return Err(Error::Eval("capture name must be a symbol".to_owned()));
-        };
-        return Ok(Arc::new(CaptureShape::new(
-            name.clone(),
-            parse_shape_expr(&items[2])?,
-        )));
+    match shape_form_name(head) {
+        Some("and" | "all") => Ok(Arc::new(AndShape::new(parse_shape_items(
+            shape_sequence_args(head, &items[1..]),
+        )?))),
+        Some("or" | "any") => Ok(Arc::new(OrShape::new(parse_shape_items(
+            shape_sequence_args(head, &items[1..]),
+        )?))),
+        Some("not" | "none") => {
+            expect_arity(head, items, 2)?;
+            Ok(Arc::new(NotShape::new(parse_shape_expr(&items[1])?)))
+        }
+        Some("capture") => parse_capture_shape(head, items),
+        Some("fields") => parse_fields_shape(&items[1..]),
+        Some("list") => Ok(Arc::new(ListShape::new(parse_shape_items(
+            shape_sequence_args(head, &items[1..]),
+        )?))),
+        Some("list-rest") => parse_list_rest_shape(head, items),
+        Some("repeat") => {
+            expect_arity(head, items, 2)?;
+            Ok(Arc::new(RepeatShape::new(parse_shape_expr(&items[1])?)))
+        }
+        Some("repeat-bounds") => parse_repeat_bounds_shape(head, items),
+        Some("table") => parse_single_table_shape(head, items),
+        Some("table-required" | "table-open") => {
+            parse_table_shape(&items[1..], TableExtraPolicy::Allow)
+        }
+        Some("table-closed") => parse_table_shape(&items[1..], TableExtraPolicy::Reject),
+        Some("without" | "difference") => parse_without_shape(head, items),
+        _ => parse_tuple_shape(items),
     }
+}
 
-    if head.namespace.is_none() && head.name.as_ref() == "fields" {
-        let specs = items
-            .iter()
-            .skip(1)
-            .map(parse_field_spec_expr)
-            .collect::<Result<Vec<_>>>()?;
-        return Ok(Arc::new(FieldShape::anonymous(specs)));
-    }
-
+fn parse_tuple_shape(items: &[Expr]) -> Result<Arc<dyn Shape>> {
     let items = items
         .iter()
         .map(parse_shape_expr)
         .collect::<Result<Vec<_>>>()?;
     Ok(Arc::new(ListShape::new(items)))
+}
+
+fn parse_shape_items(items: &[Expr]) -> Result<Vec<Arc<dyn Shape>>> {
+    items.iter().map(parse_shape_expr).collect()
+}
+
+fn shape_sequence_args<'a>(head: &Symbol, items: &'a [Expr]) -> &'a [Expr] {
+    if head.namespace.as_deref() == Some("shape")
+        && let [Expr::List(shapes)] = items
+    {
+        return shapes;
+    }
+    items
+}
+
+fn parse_capture_shape(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    expect_arity(head, items, 3)?;
+    let Expr::Symbol(name) = &items[1] else {
+        return Err(Error::Eval("capture name must be a symbol".to_owned()));
+    };
+    Ok(Arc::new(CaptureShape::new(
+        name.clone(),
+        parse_shape_expr(&items[2])?,
+    )))
+}
+
+fn parse_fields_shape(items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    let specs = items
+        .iter()
+        .map(parse_field_spec_expr)
+        .collect::<Result<Vec<_>>>()?;
+    Ok(Arc::new(FieldShape::anonymous(specs)))
+}
+
+fn parse_list_rest_shape(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    expect_arity(head, items, 3)?;
+    let Expr::List(prefix) = &items[1] else {
+        return Err(Error::Eval(
+            "list-rest prefix must be a list of shapes".to_owned(),
+        ));
+    };
+    Ok(Arc::new(ListShape::with_rest(
+        parse_shape_items(prefix)?,
+        parse_shape_expr(&items[2])?,
+    )))
+}
+
+fn parse_repeat_bounds_shape(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    expect_arity(head, items, 4)?;
+    let min = parse_usize_expr(&items[2], "repeat-bounds min")?;
+    let max = parse_optional_usize_expr(&items[3], "repeat-bounds max")?;
+    if matches!(max, Some(max) if max < min) {
+        return Err(Error::Eval(
+            "repeat-bounds max must be greater than or equal to min".to_owned(),
+        ));
+    }
+    Ok(Arc::new(RepeatShape::with_bounds(
+        parse_shape_expr(&items[1])?,
+        min,
+        max,
+    )))
+}
+
+fn parse_table_shape(items: &[Expr], extra: TableExtraPolicy) -> Result<Arc<dyn Shape>> {
+    let fields = table_field_exprs(items)
+        .iter()
+        .map(parse_table_field_spec_expr)
+        .collect::<Result<Vec<_>>>()?;
+    Ok(Arc::new(TableShape::new(fields, extra)))
+}
+
+fn parse_single_table_shape(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    expect_arity(head, items, 3)?;
+    let Expr::Symbol(name) = &items[1] else {
+        return Err(Error::Eval("table key must be a symbol".to_owned()));
+    };
+    Ok(Arc::new(TableShape::single(
+        normalize_field_symbol(name),
+        parse_shape_expr(&items[2])?,
+    )))
+}
+
+fn table_field_exprs(items: &[Expr]) -> &[Expr] {
+    if let [Expr::List(fields)] = items
+        && (fields.is_empty() || fields.iter().all(is_table_field_expr))
+    {
+        return fields;
+    }
+    items
+}
+
+fn is_table_field_expr(expr: &Expr) -> bool {
+    matches!(expr, Expr::List(items) if matches!(items.as_slice(), [Expr::Symbol(_), _]))
+}
+
+fn parse_table_field_spec_expr(expr: &Expr) -> Result<TableFieldSpec> {
+    let Expr::List(items) = expr else {
+        return Err(Error::Eval("table field shape must be a list".to_owned()));
+    };
+    let [Expr::Symbol(name), shape] = items.as_slice() else {
+        return Err(Error::Eval(
+            "table field shape must be of the form (:field Shape)".to_owned(),
+        ));
+    };
+    Ok(TableFieldSpec {
+        key: normalize_field_symbol(name),
+        shape: parse_shape_expr(shape)?,
+        required: true,
+    })
+}
+
+fn parse_without_shape(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    expect_arity(head, items, 3)?;
+    let left = parse_shape_expr(&items[1])?;
+    let right = parse_shape_expr(&items[2])?;
+    let negated_right: Arc<dyn Shape> = Arc::new(NotShape::new(right));
+    Ok(Arc::new(AndShape::new(vec![left, negated_right])))
+}
+
+fn parse_optional_usize_expr(expr: &Expr, context: &str) -> Result<Option<usize>> {
+    if matches!(expr, Expr::Nil) {
+        Ok(None)
+    } else {
+        parse_usize_expr(expr, context).map(Some)
+    }
+}
+
+fn parse_usize_expr(expr: &Expr, context: &str) -> Result<usize> {
+    let Expr::Number(number) = expr else {
+        return Err(Error::Eval(format!("{context} expects a number")));
+    };
+    number
+        .canonical
+        .parse::<usize>()
+        .map_err(|_| Error::Eval(format!("{context} expects a non-negative integer")))
+}
+
+fn shape_form_name(symbol: &Symbol) -> Option<&str> {
+    if symbol.namespace.is_none() || symbol.namespace.as_deref() == Some("shape") {
+        Some(symbol.name.as_ref())
+    } else {
+        None
+    }
+}
+
+fn expect_arity(head: &Symbol, items: &[Expr], expected: usize) -> Result<()> {
+    if items.len() == expected {
+        Ok(())
+    } else {
+        Err(Error::Eval(format!(
+            "{head} expects {} argument(s), got {}",
+            expected - 1,
+            items.len().saturating_sub(1)
+        )))
+    }
 }
 
 fn parse_field_spec_expr(expr: &Expr) -> Result<FieldSpec> {

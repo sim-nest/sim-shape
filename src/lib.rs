@@ -67,6 +67,8 @@ mod diagnostics;
 mod functions;
 mod hooks;
 mod parse;
+#[cfg(test)]
+mod parse_tests;
 mod primitives;
 mod recursion;
 #[cfg(test)]
