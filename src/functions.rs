@@ -6,6 +6,9 @@ use std::sync::Arc;
 
 mod shape_object;
 
+#[cfg(test)]
+mod tests;
+
 use sim_kernel::{
     Args, Callable, ClassRef, Cx, Demand, FunctionId, Object, PreparedArgs, RawArgs,
     ReadConstructor, Result, ShapeId, ShapeRef, Symbol, Value, shape_is_subshape_of,

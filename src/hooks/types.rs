@@ -25,6 +25,13 @@ pub enum MatchHookKind {
     Annotate,
 }
 
+impl MatchHookKind {
+    /// Whether this hook kind leaves acceptance unchanged.
+    pub fn preserves_acceptance(self) -> bool {
+        matches!(self, Self::Mark | Self::Annotate)
+    }
+}
+
 /// Match target observed by a hook.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MatchHookTargetKind {

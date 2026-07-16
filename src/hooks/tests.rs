@@ -1,11 +1,12 @@
 use std::sync::{Arc, Mutex};
 
-use sim_kernel::{Cx, Diagnostic, Expr, NoopEvalPolicy, Result, Value};
+use sim_kernel::{Cx, Diagnostic, Expr, NoopEvalPolicy, Result, Value, shape_is_subshape_of};
 
 use crate::{
-    AcceptOnNoDiagnosticsHook, AnyShape, DiscardOnDiagnosticPrefixHook, HookedShape, MatchHook,
-    MatchHookContext, MatchHookDecision, MatchHookKind, MatchHookPhase, MatchHookTargetKind,
-    MatchScore, ScoreFloorHook, Shape, ShapeDoc, ShapeMatch, TraceMarkHook, hook_value,
+    AcceptOnNoDiagnosticsHook, AnyShape, DiscardOnDiagnosticPrefixHook, ExactExprShape, ExprKind,
+    ExprKindShape, HookedShape, MatchHook, MatchHookContext, MatchHookDecision, MatchHookKind,
+    MatchHookPhase, MatchHookTargetKind, MatchScore, ScoreFloorHook, Shape, ShapeDoc, ShapeMatch,
+    TraceMarkHook, hook_value,
 };
 
 fn cx() -> Cx {
@@ -200,6 +201,52 @@ fn built_in_hook_values_have_stable_display() {
     assert_eq!(display, "#<shape-hook shape/trace-mark mark>");
 }
 
+#[test]
+fn acceptance_changing_hooks_make_total_shape_non_total() {
+    let transparent = HookedShape::new(
+        Arc::new(TotalShape),
+        vec![Arc::new(TraceMarkHook), Arc::new(ScoreFloorHook::new(50))],
+    );
+    let widened = HookedShape::new(
+        Arc::new(TotalShape),
+        vec![Arc::new(AcceptOnNoDiagnosticsHook)],
+    );
+    let narrowed = HookedShape::new(
+        Arc::new(TotalShape),
+        vec![Arc::new(DiscardOnDiagnosticPrefixHook::new("never:"))],
+    );
+
+    assert!(transparent.is_total());
+    assert!(!widened.is_total());
+    assert!(!narrowed.is_total());
+}
+
+#[test]
+fn hooked_shape_subshape_requires_identical_transparent_stacks() {
+    let mut cx = cx();
+    let child = HookedShape::new(
+        Arc::new(ExactExprShape::new(Expr::Bool(true))),
+        vec![Arc::new(TraceMarkHook)],
+    );
+    let parent = HookedShape::new(
+        Arc::new(ExprKindShape::new(ExprKind::Bool)),
+        vec![Arc::new(TraceMarkHook)],
+    );
+    let plain_parent = ExprKindShape::new(ExprKind::Bool);
+    let widened_child = HookedShape::new(
+        Arc::new(ExactExprShape::new(Expr::Bool(true))),
+        vec![Arc::new(AcceptOnNoDiagnosticsHook)],
+    );
+    let widened_parent = HookedShape::new(
+        Arc::new(ExprKindShape::new(ExprKind::Bool)),
+        vec![Arc::new(AcceptOnNoDiagnosticsHook)],
+    );
+
+    assert!(shape_is_subshape_of(&mut cx, &child, &parent).unwrap());
+    assert!(!shape_is_subshape_of(&mut cx, &child, &plain_parent).unwrap());
+    assert!(!shape_is_subshape_of(&mut cx, &widened_child, &widened_parent).unwrap());
+}
+
 fn diagnostics(matched: &ShapeMatch) -> Vec<&str> {
     matched
         .diagnostics
@@ -376,5 +423,25 @@ impl NoisyAcceptShape {
             .diagnostics
             .push(Diagnostic::info("inner: accepted with note"));
         matched
+    }
+}
+
+struct TotalShape;
+
+impl Shape for TotalShape {
+    fn is_total(&self) -> bool {
+        true
+    }
+
+    fn check_value(&self, _cx: &mut Cx, _value: Value) -> Result<ShapeMatch> {
+        Ok(ShapeMatch::accept(MatchScore::exact(5)))
+    }
+
+    fn check_expr(&self, _cx: &mut Cx, _expr: &Expr) -> Result<ShapeMatch> {
+        Ok(ShapeMatch::accept(MatchScore::exact(5)))
+    }
+
+    fn describe(&self, _cx: &mut Cx) -> Result<ShapeDoc> {
+        Ok(ShapeDoc::new("total shape"))
     }
 }

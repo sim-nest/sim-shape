@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use sim_kernel::{Cx, Diagnostic, Expr, Result, ShapeRef, Value};
+use sim_kernel::{Cx, Diagnostic, Expr, Result, ShapeRef, Value, shape_is_subshape_of};
 
 use crate::{
     MatchScore, Shape, ShapeDoc, ShapeMatch,
@@ -53,11 +53,36 @@ impl HookedShape {
     pub fn hooks(&self) -> &[Arc<dyn MatchHook>] {
         &self.hooks
     }
+
+    fn acceptance_transparent(&self) -> bool {
+        self.hooks
+            .iter()
+            .all(|hook| hook.kind().preserves_acceptance())
+    }
+
+    fn matches_transparent_hook_stack(&self, other: &Self) -> bool {
+        self.acceptance_transparent()
+            && other.acceptance_transparent()
+            && self.hooks.len() == other.hooks.len()
+            && self
+                .hooks
+                .iter()
+                .zip(other.hooks.iter())
+                .all(|(left, right)| {
+                    left.kind() == right.kind()
+                        && left.kind().preserves_acceptance()
+                        && left.symbol() == right.symbol()
+                        && left.object_encoding() == right.object_encoding()
+                })
+    }
 }
 
 impl Shape for HookedShape {
-    fn parents(&self, cx: &mut Cx) -> Result<Vec<ShapeRef>> {
-        self.inner.parents(cx)
+    fn parents(&self, _cx: &mut Cx) -> Result<Vec<ShapeRef>> {
+        // Hook wrappers must not leak the inner shape's parent lattice into
+        // the generic walk; conservative subshape proofs go through the
+        // wrapper's own override instead.
+        Ok(Vec::new())
     }
 
     fn is_effectful(&self) -> bool {
@@ -65,11 +90,17 @@ impl Shape for HookedShape {
     }
 
     fn is_total(&self) -> bool {
-        self.inner.is_total()
+        self.acceptance_transparent() && self.inner.is_total()
     }
 
     fn is_subshape_of(&self, cx: &mut Cx, parent: &dyn Shape) -> Result<Option<bool>> {
-        self.inner.is_subshape_of(cx, parent)
+        let Some(parent) = parent.as_any().downcast_ref::<Self>() else {
+            return Ok(None);
+        };
+        if !self.matches_transparent_hook_stack(parent) {
+            return Ok(None);
+        }
+        shape_is_subshape_of(cx, self.inner.as_ref(), parent.inner.as_ref()).map(Some)
     }
 
     fn check_value(&self, cx: &mut Cx, value: Value) -> Result<ShapeMatch> {
