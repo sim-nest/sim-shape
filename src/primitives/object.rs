@@ -188,6 +188,10 @@ impl FieldShape {
 }
 
 impl Shape for FieldShape {
+    fn is_effectful(&self) -> bool {
+        self.fields.iter().any(|field| field.shape.is_effectful())
+    }
+
     fn check_value(&self, cx: &mut Cx, value: Value) -> Result<ShapeMatch> {
         let expr = value.object().as_expr(cx)?;
         self.check_expr(cx, &expr)

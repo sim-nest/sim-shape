@@ -167,6 +167,11 @@ impl ListShape {
 }
 
 impl Shape for ListShape {
+    fn is_effectful(&self) -> bool {
+        self.items.iter().any(|shape| shape.is_effectful())
+            || self.rest.as_ref().is_some_and(|shape| shape.is_effectful())
+    }
+
     fn is_subshape_of(&self, cx: &mut Cx, parent: &dyn Shape) -> Result<Option<bool>> {
         let Some(parent) = parent.as_any().downcast_ref::<Self>() else {
             return Ok(None);
@@ -310,6 +315,10 @@ impl Shape for CaptureShape {
         self.inner.is_total()
     }
 
+    fn is_effectful(&self) -> bool {
+        self.inner.is_effectful()
+    }
+
     fn check_value(&self, cx: &mut Cx, value: Value) -> Result<ShapeMatch> {
         let mut matched = self.inner.check_value(cx, value.clone())?;
         if matched.accepted {
@@ -380,6 +389,10 @@ impl OneOfShape {
 }
 
 impl Shape for OneOfShape {
+    fn is_effectful(&self) -> bool {
+        self.choices.iter().any(|choice| choice.is_effectful())
+    }
+
     fn is_total(&self) -> bool {
         self.choices.iter().any(|choice| choice.is_total())
     }
@@ -445,6 +458,11 @@ pub trait ShapeExprParser: Send + Sync {
     /// A short human-readable name for this parser, used in shape descriptions.
     fn label(&self) -> &str;
 
+    /// Whether parsing may run effects; `false` by default.
+    fn is_effectful(&self) -> bool {
+        false
+    }
+
     /// Parse source text into an expression to match against the inner shape.
     fn parse_expr(&self, source: &str) -> Result<Expr>;
 }
@@ -478,6 +496,10 @@ impl PrattShape {
 }
 
 impl Shape for PrattShape {
+    fn is_effectful(&self) -> bool {
+        self.parser.is_effectful() || self.inner.is_effectful()
+    }
+
     fn check_value(&self, cx: &mut Cx, value: Value) -> Result<ShapeMatch> {
         let expr = value.object().as_expr(cx)?;
         self.check_expr(cx, &expr)

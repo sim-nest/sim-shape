@@ -4,6 +4,8 @@
 mod atomic;
 mod combinators;
 mod object;
+#[cfg(test)]
+mod tests;
 
 pub use atomic::{AnyShape, ClassShape, ExactExprShape, ExprKindShape, NumberValueShape};
 pub use combinators::{
