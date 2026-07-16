@@ -1,5 +1,15 @@
 {
-  "schema": "sim.feature-map.v1",
-  "repo": "sim-shape",
-  "packages": []
+  "generator": "xtask repo-contract v1",
+  "packages": [
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "sim-shape"
+    },
+    {
+      "features": [],
+      "group": "workspace",
+      "package": "xtask"
+    }
+  ]
 }
