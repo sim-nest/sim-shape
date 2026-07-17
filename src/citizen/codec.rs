@@ -131,48 +131,36 @@ pub(crate) fn decode_shape_value(
         return Ok(shape.shape.clone());
     }
     if let Some(shape) = value.object().as_shape() {
-        return clone_supported_shape(shape, field);
+        return clone_supported_shape(cx, shape, field);
     }
     let expr = value.object().as_expr(cx)?;
     let constructed = construct_from_expr(cx, &expr, field)?;
-    constructed
+    extract_shape(constructed, field)
+}
+
+fn extract_shape(value: Value, field: &'static str) -> Result<Arc<dyn Shape>> {
+    value
         .object()
         .downcast_ref::<ShapeObject>()
         .map(|shape| shape.shape.clone())
         .ok_or_else(|| field_error(field, "constructor did not produce a shape value"))
 }
 
-fn clone_supported_shape(shape: &dyn Shape, field: &'static str) -> Result<Arc<dyn Shape>> {
-    if shape.as_any().is::<AnyShape>() {
-        return Ok(Arc::new(AnyShape));
+fn clone_supported_shape(
+    cx: &mut Cx,
+    shape: &dyn Shape,
+    field: &'static str,
+) -> Result<Arc<dyn Shape>> {
+    let expr = encode_shape_expr(shape).map_err(|err| shape_field_error(field, err))?;
+    let constructed = construct_from_expr(cx, &expr, field)?;
+    extract_shape(constructed, field)
+}
+
+fn shape_field_error(field: &'static str, err: Error) -> Error {
+    match err {
+        Error::Eval(message) => field_error(field, message),
+        other => other,
     }
-    if let Some(exact) = shape.as_any().downcast_ref::<ExactExprShape>() {
-        return Ok(Arc::new(ExactExprShape::new(exact.expected().clone())));
-    }
-    if let Some(kind) = shape.as_any().downcast_ref::<ExprKindShape>() {
-        return Ok(Arc::new(ExprKindShape::new(kind.kind().clone())));
-    }
-    if let Some(class) = shape.as_any().downcast_ref::<ClassShape>() {
-        return Ok(Arc::new(ClassShape::new(class.symbol().clone())));
-    }
-    if let Some(list) = shape.as_any().downcast_ref::<ListShape>() {
-        let items = list
-            .items()
-            .iter()
-            .map(|item| clone_supported_shape(item.as_ref(), field))
-            .collect::<Result<Vec<_>>>()?;
-        return Ok(match list.rest() {
-            Some(rest) => Arc::new(ListShape::with_rest(
-                items,
-                clone_supported_shape(rest.as_ref(), field)?,
-            )),
-            None => Arc::new(ListShape::new(items)),
-        });
-    }
-    Err(field_error(
-        field,
-        "shape value is not one of the citizen-supported pure descriptors",
-    ))
 }
 
 fn construct_from_expr(cx: &mut Cx, expr: &Expr, field: &'static str) -> Result<Value> {
