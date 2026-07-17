@@ -1,3 +1,5 @@
+use std::cmp::Reverse;
+
 use sim_kernel::{CaseId, Cx, Demand, PreparedArgs, RawArgs, Result, ShapeId, Value};
 
 use super::{FunctionCase, FunctionObject, SelectedCase, refine_prepared_args};
@@ -126,7 +128,7 @@ impl FunctionObject {
 
     fn priority_case_groups(&self) -> Vec<Vec<&FunctionCase>> {
         let mut cases = self.cases.iter().collect::<Vec<_>>();
-        cases.sort_by(|left, right| right.priority.cmp(&left.priority));
+        cases.sort_by_key(|case| Reverse(case.priority));
 
         let mut groups = Vec::<Vec<&FunctionCase>>::new();
         for case in cases {
