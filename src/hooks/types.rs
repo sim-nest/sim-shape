@@ -116,7 +116,8 @@ pub trait MatchHook: Send + Sync {
 /// Opaque runtime object that carries a shape hook.
 #[non_citizen(
     reason = "may wrap custom live hook code; built-in pure hook descriptors use shape/*Hook citizens",
-    kind = "function"
+    kind = "function",
+    descriptor = "shape/live-hook"
 )]
 #[derive(Clone)]
 pub struct MatchHookObject {
