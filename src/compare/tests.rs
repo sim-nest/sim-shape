@@ -6,7 +6,8 @@ use crate::{
     AcceptOnNoDiagnosticsHook, AndShape, AnyShape, Bindings, DiscardOnDiagnosticPrefixHook,
     ExactExprShape, ExprKind, ExprKindShape, HookedShape, ListShape, MatchScore, NotShape,
     OneOfShape, OrShape, Shape, ShapeDoc, ShapeMatch, ShapeNormalKind, ShapeProbe,
-    ShapeRelationKind, VennShapeSet, normalize_shape, relate_shapes,
+    ShapeRelationKind, TableExtraPolicy, TableFieldSpec, TableShape, VennShapeSet, normalize_shape,
+    relate_shapes,
 };
 
 use sim_kernel::testing::bare_cx as cx;
@@ -152,6 +153,74 @@ fn compare_hook_narrowed_shape_stays_unproven() {
     assert_eq!(relation.kind, ShapeRelationKind::Unknown);
     assert!(!relation.proven);
     assert_eq!(relation.witnesses[0].note, "accepted by right only");
+}
+
+#[test]
+fn compare_closed_child_extra_key_stays_unproven() {
+    let mut cx = cx();
+    let left = TableShape::new(
+        vec![TableFieldSpec {
+            key: Symbol::new("y"),
+            shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+            required: true,
+        }],
+        TableExtraPolicy::Reject,
+    );
+    let right = TableShape::new(Vec::new(), TableExtraPolicy::Reject);
+    let probes = vec![ShapeProbe::Expr {
+        label: "child-only y".to_owned(),
+        expr: Expr::Map(vec![(Expr::Symbol(Symbol::new("y")), number_expr("1"))]),
+    }];
+
+    let relation = relate_shapes(&mut cx, &left, &right, &probes).unwrap();
+
+    assert_eq!(relation.kind, ShapeRelationKind::Unknown);
+    assert!(!relation.proven);
+    assert_eq!(relation.witnesses[0].note, "accepted by left only");
+}
+
+#[test]
+fn compare_optional_parent_field_constraint_stays_unproven() {
+    let mut cx = cx();
+    let left = TableShape::new(
+        vec![TableFieldSpec {
+            key: Symbol::new("x"),
+            shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+            required: true,
+        }],
+        TableExtraPolicy::Shape(Arc::new(ExprKindShape::new(ExprKind::String))),
+    );
+    let right = TableShape::new(
+        vec![
+            TableFieldSpec {
+                key: Symbol::new("x"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: true,
+            },
+            TableFieldSpec {
+                key: Symbol::new("y"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: false,
+            },
+        ],
+        TableExtraPolicy::Reject,
+    );
+    let probes = vec![ShapeProbe::Expr {
+        label: "bad optional y".to_owned(),
+        expr: Expr::Map(vec![
+            (Expr::Symbol(Symbol::new("x")), number_expr("1")),
+            (
+                Expr::Symbol(Symbol::new("y")),
+                Expr::String("bad".to_owned()),
+            ),
+        ]),
+    }];
+
+    let relation = relate_shapes(&mut cx, &left, &right, &probes).unwrap();
+
+    assert_eq!(relation.kind, ShapeRelationKind::Unknown);
+    assert!(!relation.proven);
+    assert_eq!(relation.witnesses[0].note, "accepted by left only");
 }
 
 #[test]

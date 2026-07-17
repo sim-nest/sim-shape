@@ -103,20 +103,20 @@ impl Shape for TableShape {
         };
 
         for parent_field in parent.fields() {
-            if !parent_field.required {
+            if !parent_field_compatible(cx, self, parent_field)? {
+                return Ok(None);
+            }
+        }
+
+        for child_field in self.fields() {
+            if parent
+                .fields()
+                .iter()
+                .any(|parent_field| parent_field.key == child_field.key)
+            {
                 continue;
             }
-            let Some(field) = self
-                .fields
-                .iter()
-                .find(|candidate| candidate.key == parent_field.key)
-            else {
-                return Ok(None);
-            };
-            if !field.required {
-                return Ok(None);
-            }
-            if !shape_is_subshape_of(cx, field.shape.as_ref(), parent_field.shape.as_ref())? {
+            if !field_accepted_by_parent(cx, child_field, parent)? {
                 return Ok(None);
             }
         }
@@ -486,6 +486,58 @@ fn extra_policy_at_least_as_strict(
         (TableExtraPolicy::Allow, TableExtraPolicy::Reject | TableExtraPolicy::Shape(_)) => false,
         (TableExtraPolicy::Shape(_), TableExtraPolicy::Reject) => false,
     })
+}
+
+fn parent_field_compatible(
+    cx: &mut Cx,
+    child: &TableShape,
+    parent_field: &TableFieldSpec,
+) -> Result<bool> {
+    if let Some(child_field) = child
+        .fields()
+        .iter()
+        .find(|candidate| candidate.key == parent_field.key)
+    {
+        if parent_field.required && !child_field.required {
+            return Ok(false);
+        }
+        return shape_is_subshape_of(cx, child_field.shape.as_ref(), parent_field.shape.as_ref());
+    }
+
+    if parent_field.required {
+        return Ok(false);
+    }
+
+    match child.extra() {
+        TableExtraPolicy::Reject => Ok(true),
+        // Unchecked extras can hit this optional key with values the parent field rejects.
+        TableExtraPolicy::Allow => Ok(false),
+        TableExtraPolicy::Shape(shape) => {
+            shape_is_subshape_of(cx, shape.as_ref(), parent_field.shape.as_ref())
+        }
+    }
+}
+
+fn field_accepted_by_parent(
+    cx: &mut Cx,
+    child_field: &TableFieldSpec,
+    parent: &TableShape,
+) -> Result<bool> {
+    if let Some(parent_field) = parent
+        .fields()
+        .iter()
+        .find(|candidate| candidate.key == child_field.key)
+    {
+        return shape_is_subshape_of(cx, child_field.shape.as_ref(), parent_field.shape.as_ref());
+    }
+
+    match parent.extra() {
+        TableExtraPolicy::Allow => Ok(true),
+        TableExtraPolicy::Reject => Ok(false),
+        TableExtraPolicy::Shape(extra) => {
+            shape_is_subshape_of(cx, child_field.shape.as_ref(), extra.as_ref())
+        }
+    }
 }
 
 fn max_at_most(child: Option<usize>, parent: Option<usize>) -> bool {
