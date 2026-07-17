@@ -3,10 +3,10 @@
   "generated_by": "cargo run -p xtask -- simdoc",
   "generation_timestamp": "2026-07-12T17:21:11+02:00",
   "generator": "xtask repo-contract v1",
-  "git_commit": "aefc5649a7e6827a15adfbc607a8a805fd8ac89d",
+  "git_commit": "6e2f5c694145f2fcdb1ed2f83007295c2fe55771",
   "repo": "sim-shape",
   "schema": "sim.provenance.v1",
-  "source_commit": "aefc5649a7e6827a15adfbc607a8a805fd8ac89d",
+  "source_commit": "6e2f5c694145f2fcdb1ed2f83007295c2fe55771",
   "source_remote": "https://github.com/sim-nest/sim-shape",
   "validation_commands": [
     "cargo fmt --all --check",
@@ -19,9 +19,9 @@
     "cargo run -p xtask -- validation-matrix --check --repo .",
     "cargo run -p xtask -- crate-catalog --check --repo ."
   ],
-  "workspace_hash": "e1acfc2d8542e2b3",
+  "workspace_hash": "524649d0f1e1e61a",
   "workspace_hash_algorithm": "fnv1a64",
-  "workspace_hash_input_count": 37,
+  "workspace_hash_input_count": 38,
   "workspace_hash_inputs": [
     "Cargo.toml",
     "src/algebra/boolean.rs",
@@ -41,6 +41,7 @@
     "src/compare/venn.rs",
     "src/compare.rs",
     "src/diagnostics.rs",
+    "src/functions/demand.rs",
     "src/functions/shape_object.rs",
     "src/functions/tests.rs",
     "src/functions.rs",

@@ -4,6 +4,7 @@
 use std::cmp::Ordering;
 use std::sync::Arc;
 
+mod demand;
 mod shape_object;
 
 #[cfg(test)]
@@ -90,11 +91,22 @@ impl FunctionObject {
         cx: &mut Cx,
         prepared: &PreparedArgs,
     ) -> Result<SelectedCase<'a>> {
+        let cases = self.cases.iter().collect::<Vec<_>>();
+        let (matches, diagnostics) = self.collect_matches(cx, prepared, &cases)?;
+        self.select_best_case(cx, matches, diagnostics)
+    }
+
+    fn collect_matches<'a>(
+        &'a self,
+        cx: &mut Cx,
+        prepared: &PreparedArgs,
+        cases: &[&'a FunctionCase],
+    ) -> Result<(Vec<SelectedCase<'a>>, Vec<sim_kernel::Diagnostic>)> {
         let mut matches = Vec::new();
         let mut diagnostics = Vec::new();
         let args = cx.new_list(prepared.values().to_vec())?;
 
-        for case in &self.cases {
+        for case in cases {
             let matched = case.args.check_value(cx, args.clone())?;
             if matched.accepted {
                 matches.push(SelectedCase {
@@ -106,6 +118,15 @@ impl FunctionObject {
             }
         }
 
+        Ok((matches, diagnostics))
+    }
+
+    fn select_best_case<'a>(
+        &'a self,
+        cx: &mut Cx,
+        mut matches: Vec<SelectedCase<'a>>,
+        mut diagnostics: Vec<sim_kernel::Diagnostic>,
+    ) -> Result<SelectedCase<'a>> {
         if matches.is_empty() {
             diagnostics.insert(
                 0,
@@ -382,28 +403,7 @@ impl Callable for FunctionObject {
     }
 
     fn call_exprs(&self, cx: &mut Cx, args: RawArgs) -> Result<Value> {
-        let prepared =
-            cx.eval_policy_ref()
-                .prepare_call_args(cx, args, &self.declared_demands())?;
-        let selected = self.select_case(cx, &prepared)?;
-        let prepared = refine_prepared_args(cx, &prepared, selected.case)?;
-        let bindings = selected.match_result.captures;
-        let env = bindings.clone().into_child_env(cx)?;
-        let result = cx.with_env(env, |cx| {
-            (selected.case.implementation)(cx, &prepared, bindings)
-        })?;
-
-        if let Some(shape) = &selected.case.result {
-            let matched = shape.check_value(cx, result.clone())?;
-            if !matched.accepted {
-                return Err(sim_kernel::Error::WrongShape {
-                    expected: shape.id().unwrap_or(ShapeId(0)),
-                    diagnostics: matched.diagnostics,
-                });
-            }
-        }
-
-        Ok(result)
+        self.call_exprs_with_demands(cx, args)
     }
 }
 
