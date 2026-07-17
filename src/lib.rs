@@ -64,6 +64,9 @@ mod citizen;
 mod citizen_tests;
 mod compare;
 mod diagnostics;
+#[cfg(test)]
+mod duplicate_key_tests;
+mod duplicate_keys;
 mod functions;
 mod hooks;
 mod options;

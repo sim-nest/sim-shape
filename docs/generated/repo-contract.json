@@ -99,10 +99,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-12T17:21:11+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "d9145232135e7f00413ab4104ad7310b6dc82921",
+    "git_commit": "07d86339ecaa8d0e7e187eea84a7e25611ea0f96",
     "repo": "sim-shape",
     "schema": "sim.provenance.v1",
-    "source_commit": "d9145232135e7f00413ab4104ad7310b6dc82921",
+    "source_commit": "07d86339ecaa8d0e7e187eea84a7e25611ea0f96",
     "source_remote": "https://github.com/sim-nest/sim-shape",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -115,9 +115,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "50aaf30789934db9",
+    "workspace_hash": "87259ccc8df341ab",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 38,
+    "workspace_hash_input_count": 40,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "src/algebra/boolean.rs",
@@ -137,6 +137,8 @@
       "src/compare/venn.rs",
       "src/compare.rs",
       "src/diagnostics.rs",
+      "src/duplicate_key_tests.rs",
+      "src/duplicate_keys.rs",
       "src/functions/demand.rs",
       "src/functions/shape_object.rs",
       "src/functions/tests.rs",

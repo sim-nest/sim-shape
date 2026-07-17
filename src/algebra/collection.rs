@@ -10,6 +10,7 @@ use sim_kernel::{
 use crate::{
     algebra::{capture_symbol, number_expr, number_value, symbol_list_expr, symbol_list_value},
     base::{Bindings, MatchScore, Shape, ShapeDoc, ShapeMatch},
+    duplicate_keys::reject_duplicate_symbol_keys,
 };
 
 /// Shape for table values or map expressions with named field constraints.
@@ -284,6 +285,12 @@ impl TableShape {
     }
 
     fn check_value_entries(&self, cx: &mut Cx, entries: &[(Symbol, Value)]) -> Result<ShapeMatch> {
+        match reject_duplicate_symbol_keys(entries, "shape-table") {
+            Ok(()) => {}
+            Err(sim_kernel::Error::Eval(message)) => return Ok(ShapeMatch::reject(message)),
+            Err(err) => return Err(err),
+        }
+
         let mut out = ShapeMatch::accept(MatchScore::exact(20));
         let mut matched_keys = Vec::new();
         let mut missing_keys = Vec::new();
@@ -357,6 +364,12 @@ impl TableShape {
     }
 
     fn check_map_expr(&self, cx: &mut Cx, entries: &[(Symbol, Expr)]) -> Result<ShapeMatch> {
+        match reject_duplicate_symbol_keys(entries, "shape-table") {
+            Ok(()) => {}
+            Err(sim_kernel::Error::Eval(message)) => return Ok(ShapeMatch::reject(message)),
+            Err(err) => return Err(err),
+        }
+
         let mut out = ShapeMatch::accept(MatchScore::exact(20));
         let mut matched_keys = Vec::new();
         let mut missing_keys = Vec::new();
