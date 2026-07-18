@@ -36,3 +36,4 @@ jobs:
       - run: cargo run -p xtask -- simdoc --check
         env:
           SIMDOC_TOOLING_MANIFEST: ${{ github.workspace }}/sim-tooling/Cargo.toml
+      - run: cargo run -p xtask -- check-file-sizes

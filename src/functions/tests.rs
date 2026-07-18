@@ -132,7 +132,7 @@ fn discard_hooked_case_does_not_create_false_specificity_proof() {
     let prepared = PreparedArgs::new(vec![cx.factory().bool(false).unwrap()]);
 
     let err = match function.select_case(&mut cx, &prepared) {
-        Ok(_) => panic!("hook-narrowed case should no longer win by inner-shape proof"),
+        Ok(_) => panic!("hook-narrowed case must not win by inner-shape proof"),
         Err(err) => err,
     };
     let sim_kernel::Error::AmbiguousOverload { candidates, .. } = err else {

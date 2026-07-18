@@ -73,7 +73,7 @@ pub struct ShapeObject {
     pub symbol: Symbol,
     /// The wrapped shape engine.
     pub shape: Arc<dyn Shape>,
-    /// Constructor encoding used to round-trip the shape back to an expression.
+    /// Constructor encoding for round-tripping the shape back to an expression.
     pub encoding: Option<ObjectEncoding>,
 }
 
@@ -87,7 +87,7 @@ impl ShapeObject {
         }
     }
 
-    /// Wrap a shape and record the constructor encoding used to re-encode it.
+    /// Wrap a shape and record the constructor encoding for re-encoding it.
     pub fn with_encoding(symbol: Symbol, shape: Arc<dyn Shape>, encoding: ObjectEncoding) -> Self {
         Self {
             symbol,

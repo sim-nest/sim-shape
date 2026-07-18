@@ -7,7 +7,7 @@ use sim_kernel::{ClassRef, Cx, Error, Expr, Object, ObjectEncode, ObjectEncoding
 
 use crate::{AndShape, NotShape, OrShape, Shape};
 
-/// Named set of shapes used to build Venn-style regions.
+/// Named set of shapes for building Venn-style regions.
 ///
 /// `VennShapeSet` is a runtime object so Lisp helpers can create it once and
 /// then request union, intersection, selected-only, outside, or exactly regions.
