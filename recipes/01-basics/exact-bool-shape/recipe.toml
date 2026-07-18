@@ -1,5 +1,5 @@
 id = "exact-bool-shape"
-title = "Exact boolean shape"
+title = "Parsed and exact boolean shape"
 codec = "rust"
 setup = "src/main.rs"
 purpose = "README.md"

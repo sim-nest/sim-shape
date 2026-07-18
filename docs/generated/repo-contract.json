@@ -142,10 +142,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-12T17:21:11+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "94317b6f173bf99f577b919e410afadcc030d409",
+    "git_commit": "79078879effed651a10673126f3f9548e3ab6f6f",
     "repo": "sim-shape",
     "schema": "sim.provenance.v1",
-    "source_commit": "94317b6f173bf99f577b919e410afadcc030d409",
+    "source_commit": "79078879effed651a10673126f3f9548e3ab6f6f",
     "source_remote": "https://github.com/sim-nest/sim-shape",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -158,7 +158,7 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "de5630f8c25926e7",
+    "workspace_hash": "c8a99edfe464191b",
     "workspace_hash_algorithm": "fnv1a64",
     "workspace_hash_input_count": 43,
     "workspace_hash_inputs": [
@@ -223,7 +223,7 @@
           "id": "exact-bool-shape",
           "package": "sim-shape",
           "recipe_toml": "recipes/01-basics/exact-bool-shape/recipe.toml",
-          "title": "Exact boolean shape"
+          "title": "Parsed and exact boolean shape"
         }
       ],
       "summary": "Runnable shape matching examples.",
