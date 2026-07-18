@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 2,
+  "package_count": 3,
   "packages": [
     {
       "description": "Shape algebra, comparison, and match-hook helpers.",
@@ -12,6 +12,18 @@
       "root": ".",
       "target_kinds": [
         "lib"
+      ]
+    },
+    {
+      "description": "Runnable exact boolean shape cookbook recipe.",
+      "generated_readme": false,
+      "manifest": "recipes/01-basics/exact-bool-shape/Cargo.toml",
+      "name": "sim-shape-recipe-exact-bool-shape",
+      "publish": "false",
+      "readme": "recipes/01-basics/exact-bool-shape/README.md",
+      "root": "recipes/01-basics/exact-bool-shape",
+      "target_kinds": [
+        "bin"
       ]
     },
     {

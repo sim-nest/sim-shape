@@ -1,0 +1,9 @@
+id = "exact-bool-shape"
+title = "Exact boolean shape"
+codec = "rust"
+setup = "src/main.rs"
+purpose = "README.md"
+expected = "expected.txt"
+order = 10
+tags = ["shape", "matching", "rust"]
+requires = ["sim-shape", "sim-kernel"]

@@ -1,0 +1,15 @@
+[package]
+name = "sim-shape-recipe-exact-bool-shape"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+description = "Runnable exact boolean shape cookbook recipe."
+readme = "README.md"
+publish = false
+
+[dependencies]
+sim-kernel = "0.1.0"
+sim-shape = { path = "../../.." }
+
+[lints]
+workspace = true

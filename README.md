@@ -96,6 +96,9 @@ public item, field, and variant must be documented for the crate to build.
 
 ### Examples and recipes
 
-The crate's examples are its rustdoc doctests. sim-shape ships no `recipes/`
-tree; recipes that exercise shapes end to end live in the crates that load a
-codec and a runtime to evaluate them.
+The crate's compact examples are rustdoc doctests. The `recipes/` lane carries a
+runnable Rust recipe that checks an exact boolean shape from a standalone clone:
+
+```bash
+cargo run --manifest-path recipes/01-basics/exact-bool-shape/Cargo.toml
+```

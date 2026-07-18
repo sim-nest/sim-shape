@@ -12,6 +12,7 @@ homepage = "https://github.com/sim-nest/sim-shape"
 [workspace]
 resolver = "3"
 members = [
+  "recipes/01-basics/exact-bool-shape",
   "xtask",
 ]
 

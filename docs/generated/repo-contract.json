@@ -1,11 +1,17 @@
 {
-  "card_count": 2,
+  "card_count": 3,
   "cards": [
     {
       "id": "browse/catalog",
       "kind": "browse-root",
       "owner": "workspace",
       "summary": "root browse catalog"
+    },
+    {
+      "id": "cookbook/sim-shape",
+      "kind": "cookbook-recipe",
+      "owner": "sim-shape",
+      "summary": "Runnable shape matching examples."
     },
     {
       "id": "registry/catalog",
@@ -24,6 +30,7 @@
   "groups": {
     "workspace": [
       "sim-shape",
+      "sim-shape-recipe-exact-bool-shape",
       "xtask"
     ]
   },
@@ -38,7 +45,7 @@
       "reason": "may wrap custom live hook code; built-in pure hook descriptors use shape/*Hook citizens"
     }
   ],
-  "package_count": 2,
+  "package_count": 3,
   "packages": [
     {
       "crate_name": "sim_shape",
@@ -64,6 +71,41 @@
           ],
           "name": "sim_shape",
           "src": "src/lib.rs"
+        }
+      ]
+    },
+    {
+      "crate_name": "sim-shape-recipe-exact-bool-shape",
+      "dependencies": [
+        {
+          "kind": "normal",
+          "optional": false,
+          "package": "sim-shape",
+          "rename": null,
+          "target": null
+        }
+      ],
+      "description": "Runnable exact boolean shape cookbook recipe.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "recipes/01-basics/exact-bool-shape/Cargo.toml",
+      "name": "sim-shape-recipe-exact-bool-shape",
+      "publish": "false",
+      "root": "recipes/01-basics/exact-bool-shape",
+      "rustdoc_summary": "Runnable exact boolean shape cookbook recipe.",
+      "target_kinds": [
+        "bin"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "bin"
+          ],
+          "name": "sim-shape-recipe-exact-bool-shape",
+          "src": "recipes/01-basics/exact-bool-shape/src/main.rs"
         }
       ]
     },
@@ -100,10 +142,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-12T17:21:11+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "c8cd02f0518d7e609807fde7a8cc2e7414aaa607",
+    "git_commit": "94317b6f173bf99f577b919e410afadcc030d409",
     "repo": "sim-shape",
     "schema": "sim.provenance.v1",
-    "source_commit": "c8cd02f0518d7e609807fde7a8cc2e7414aaa607",
+    "source_commit": "94317b6f173bf99f577b919e410afadcc030d409",
     "source_remote": "https://github.com/sim-nest/sim-shape",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -116,11 +158,14 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "fd6df6b8fc2b82ba",
+    "workspace_hash": "de5630f8c25926e7",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 40,
+    "workspace_hash_input_count": 43,
     "workspace_hash_inputs": [
       "Cargo.toml",
+      "recipes/01-basics/exact-bool-shape/Cargo.toml",
+      "recipes/01-basics/exact-bool-shape/recipe.toml",
+      "recipes/book.toml",
       "src/algebra/boolean.rs",
       "src/algebra/collection.rs",
       "src/algebra/tests.rs",
@@ -162,6 +207,27 @@
       "xtask/Cargo.toml"
     ]
   },
-  "recipe_book_count": 0,
-  "recipes": []
+  "recipe_book_count": 1,
+  "recipes": [
+    {
+      "book": "sim-shape",
+      "book_toml": "recipes/book.toml",
+      "card_id": "cookbook/sim-shape",
+      "group": "workspace",
+      "package": "sim-shape",
+      "recipe_count": 1,
+      "recipes": [
+        {
+          "card_id": "sim-shape/01-basics/exact-bool-shape",
+          "codec": "rust",
+          "id": "exact-bool-shape",
+          "package": "sim-shape",
+          "recipe_toml": "recipes/01-basics/exact-bool-shape/recipe.toml",
+          "title": "Exact boolean shape"
+        }
+      ],
+      "summary": "Runnable shape matching examples.",
+      "title": "Shape recipes"
+    }
+  ]
 }

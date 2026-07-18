@@ -9,6 +9,13 @@
       "summary": "Shape algebra, comparison, and match-hook helpers."
     },
     {
+      "crate_name": "sim-shape-recipe-exact-bool-shape",
+      "group": "workspace",
+      "manifest": "recipes/01-basics/exact-bool-shape/Cargo.toml",
+      "package": "sim-shape-recipe-exact-bool-shape",
+      "summary": "Runnable exact boolean shape cookbook recipe."
+    },
+    {
       "crate_name": "xtask",
       "group": "workspace",
       "manifest": "xtask/Cargo.toml",
