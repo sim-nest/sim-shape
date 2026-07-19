@@ -113,8 +113,8 @@ pub use functions::{
     case_shape, function_cases, overload, shape_value, shape_value_with_encoding,
 };
 pub use grammar::{
-    GrammarDialect, GrammarGraph, GrammarPosition, GrammarTarget, Production, ShapeGrammar,
-    TerminalAtom, shape_grammar_graph, shape_json_schema,
+    GrammarDialect, GrammarGraph, GrammarPosition, GrammarRenderer, GrammarTarget, Production,
+    ShapeGrammar, TerminalAtom, shape_grammar, shape_grammar_graph, shape_json_schema,
 };
 pub use hooks::{
     AcceptOnNoDiagnosticsHook, DiscardOnDiagnosticPrefixHook, HookedShape, MatchHook,

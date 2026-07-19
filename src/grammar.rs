@@ -39,6 +39,49 @@ pub fn shape_json_schema(shape: &dyn Shape) -> Result<String> {
     render_json_graph(&graph)
 }
 
+/// Renders a neutral [`GrammarGraph`] into one concrete codec grammar surface.
+pub trait GrammarRenderer {
+    /// Codec symbol this renderer targets.
+    fn codec_symbol(&self) -> Symbol;
+
+    /// Concrete grammar dialect this renderer emits.
+    fn dialect(&self) -> GrammarDialect;
+
+    /// Renders `graph` for this codec at `position`.
+    fn render(&self, graph: &GrammarGraph, position: GrammarPosition) -> Result<String>;
+}
+
+/// Lowers `shape` and renders it through a supplied codec-owned renderer.
+pub fn shape_grammar(
+    shape: &dyn Shape,
+    target: GrammarTarget,
+    renderer: &dyn GrammarRenderer,
+) -> Result<ShapeGrammar> {
+    let renderer_codec = renderer.codec_symbol();
+    if renderer_codec != target.codec {
+        return Err(unsupported_shape(format!(
+            "grammar renderer targets codec {}, not {}",
+            renderer_codec, target.codec
+        )));
+    }
+    let renderer_dialect = renderer.dialect();
+    if renderer_dialect != target.dialect {
+        return Err(unsupported_shape(format!(
+            "grammar renderer targets dialect {:?}, not {:?}",
+            renderer_dialect, target.dialect
+        )));
+    }
+    let graph = shape_grammar_graph(shape)?;
+    let text = renderer.render(&graph, target.position)?;
+    let diagnostics = graph.diagnostics.clone();
+    Ok(ShapeGrammar {
+        target,
+        graph,
+        text,
+        diagnostics,
+    })
+}
+
 struct LoweredProduction {
     production: Production,
     defs: Vec<(Symbol, Production)>,
@@ -365,9 +408,12 @@ fn unsupported_shape(message: impl Into<String>) -> Error {
 mod tests {
     use std::sync::Arc;
 
-    use sim_kernel::{Expr, NumberLiteral, Symbol};
+    use sim_kernel::{Expr, NumberLiteral, Result, Symbol};
 
-    use super::{Production, TerminalAtom, shape_grammar_graph, shape_json_schema};
+    use super::{
+        GrammarDialect, GrammarPosition, GrammarRenderer, GrammarTarget, Production, TerminalAtom,
+        shape_grammar, shape_grammar_graph, shape_json_schema,
+    };
     use crate::{
         ExactExprShape, ExprKind, ExprKindShape, FieldShape, FieldSpec, ListShape,
         NumberValueShape, OneOfShape,
@@ -435,6 +481,59 @@ mod tests {
     }
 
     #[test]
+    fn shape_grammar_uses_supplied_renderer() {
+        let target = GrammarTarget {
+            codec: Symbol::qualified("codec", "test"),
+            dialect: GrammarDialect::SExpr,
+            position: GrammarPosition::Data,
+        };
+        let rendered = shape_grammar(
+            &record_shape(),
+            target.clone(),
+            &StubRenderer {
+                codec: target.codec.clone(),
+                dialect: target.dialect,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(rendered.target, target);
+        assert!(rendered.text.contains("codec/test"));
+        assert!(rendered.text.contains("root=Call"));
+        assert!(rendered.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn shape_grammar_fails_closed_on_renderer_mismatch() {
+        let target = GrammarTarget {
+            codec: Symbol::qualified("codec", "test"),
+            dialect: GrammarDialect::SExpr,
+            position: GrammarPosition::Data,
+        };
+        let wrong_codec = shape_grammar(
+            &record_shape(),
+            target.clone(),
+            &StubRenderer {
+                codec: Symbol::qualified("codec", "other"),
+                dialect: target.dialect,
+            },
+        )
+        .unwrap_err();
+        assert!(wrong_codec.to_string().contains("codec codec/other"));
+
+        let wrong_dialect = shape_grammar(
+            &record_shape(),
+            target.clone(),
+            &StubRenderer {
+                codec: target.codec.clone(),
+                dialect: GrammarDialect::JsonSchema,
+            },
+        )
+        .unwrap_err();
+        assert!(wrong_dialect.to_string().contains("dialect JsonSchema"));
+    }
+
+    #[test]
     fn unsupported_shapes_fail_closed() {
         let err = shape_grammar_graph(&NumberValueShape).unwrap_err();
         assert!(err.to_string().contains("does not support this shape"));
@@ -457,5 +556,41 @@ mod tests {
                 ])),
             ),
         ])
+    }
+
+    struct StubRenderer {
+        codec: Symbol,
+        dialect: GrammarDialect,
+    }
+
+    impl GrammarRenderer for StubRenderer {
+        fn codec_symbol(&self) -> Symbol {
+            self.codec.clone()
+        }
+
+        fn dialect(&self) -> GrammarDialect {
+            self.dialect
+        }
+
+        fn render(&self, graph: &crate::GrammarGraph, position: GrammarPosition) -> Result<String> {
+            Ok(format!(
+                "codec={} dialect={:?} position={:?} root={}",
+                self.codec,
+                self.dialect,
+                position,
+                production_kind(&graph.root)
+            ))
+        }
+    }
+
+    fn production_kind(production: &Production) -> &'static str {
+        match production {
+            Production::Terminal(_) => "Terminal",
+            Production::Seq(_) => "Seq",
+            Production::Alt(_) => "Alt",
+            Production::Repeat { .. } => "Repeat",
+            Production::Call { .. } => "Call",
+            Production::Ref(_) => "Ref",
+        }
     }
 }
