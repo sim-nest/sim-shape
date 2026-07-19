@@ -11,6 +11,7 @@ use sim_kernel::{Error, Expr, Result, Symbol};
 
 use crate::{
     AnyShape, ExactExprShape, ExprKind, ExprKindShape, FieldShape, ListShape, OneOfShape, Shape,
+    ShapeDefRef, ShapeDefs,
 };
 
 pub use graph::{
@@ -20,7 +21,12 @@ pub use graph::{
 
 /// Lower a [`Shape`] into a codec-neutral production graph.
 pub fn shape_grammar_graph(shape: &dyn Shape) -> Result<GrammarGraph> {
-    Ok(GrammarGraph::new(lower_shape(shape)?))
+    let lowered = lower_shape(shape)?;
+    Ok(GrammarGraph {
+        root: lowered.production,
+        defs: lowered.defs,
+        diagnostics: Vec::new(),
+    })
 }
 
 /// Render `shape` as JSON Schema using the seed renderer.
@@ -30,17 +36,49 @@ pub fn shape_grammar_graph(shape: &dyn Shape) -> Result<GrammarGraph> {
 /// renderers migrate to [`GrammarGraph`].
 pub fn shape_json_schema(shape: &dyn Shape) -> Result<String> {
     let graph = shape_grammar_graph(shape)?;
-    render_json_schema(&graph.root)
+    render_json_graph(&graph)
 }
 
-fn lower_shape(shape: &dyn Shape) -> Result<Production> {
+struct LoweredProduction {
+    production: Production,
+    defs: Vec<(Symbol, Production)>,
+}
+
+impl LoweredProduction {
+    fn new(production: Production) -> Self {
+        Self {
+            production,
+            defs: Vec::new(),
+        }
+    }
+}
+
+fn lower_shape(shape: &dyn Shape) -> Result<LoweredProduction> {
     if shape.as_any().is::<AnyShape>() {
-        return Ok(Production::Alt(vec![Production::Terminal(
-            TerminalAtom::Any,
-        )]));
+        return Ok(LoweredProduction::new(Production::Alt(vec![
+            Production::Terminal(TerminalAtom::Any),
+        ])));
     }
     if let Some(kind) = shape.as_any().downcast_ref::<ExprKindShape>() {
         return lower_expr_kind(kind.kind());
+    }
+    if let Some(defs) = shape.as_any().downcast_ref::<ShapeDefs>() {
+        let root = lower_shape(defs.root().as_ref())?;
+        let mut graph_defs = root.defs;
+        for (name, shape) in defs.defs() {
+            let lowered = lower_shape(shape.as_ref())?;
+            graph_defs.extend(lowered.defs);
+            graph_defs.push((name.clone(), lowered.production));
+        }
+        return Ok(LoweredProduction {
+            production: root.production,
+            defs: graph_defs,
+        });
+    }
+    if let Some(reference) = shape.as_any().downcast_ref::<ShapeDefRef>() {
+        return Ok(LoweredProduction::new(Production::Ref(
+            reference.name().clone(),
+        )));
     }
     if let Some(fields) = shape.as_any().downcast_ref::<FieldShape>() {
         return lower_field_shape(fields);
@@ -54,11 +92,22 @@ fn lower_shape(shape: &dyn Shape) -> Result<Production> {
             .iter()
             .map(|choice| lower_shape(choice.as_ref()))
             .collect::<Result<Vec<_>>>()?;
-        return Ok(Production::Alt(choices));
+        let mut defs = Vec::new();
+        let choices = choices
+            .into_iter()
+            .map(|choice| {
+                defs.extend(choice.defs);
+                choice.production
+            })
+            .collect();
+        return Ok(LoweredProduction {
+            production: Production::Alt(choices),
+            defs,
+        });
     }
     if let Some(exact) = shape.as_any().downcast_ref::<ExactExprShape>() {
-        return Ok(Production::Terminal(TerminalAtom::Exact(
-            exact.expected().clone(),
+        return Ok(LoweredProduction::new(Production::Terminal(
+            TerminalAtom::Exact(exact.expected().clone()),
         )));
     }
     Err(unsupported_shape(
@@ -66,7 +115,7 @@ fn lower_shape(shape: &dyn Shape) -> Result<Production> {
     ))
 }
 
-fn lower_expr_kind(kind: &ExprKind) -> Result<Production> {
+fn lower_expr_kind(kind: &ExprKind) -> Result<LoweredProduction> {
     let atom = match kind {
         ExprKind::Nil => TerminalAtom::Nil,
         ExprKind::Bool => TerminalAtom::Bool,
@@ -82,44 +131,83 @@ fn lower_expr_kind(kind: &ExprKind) -> Result<Production> {
             )));
         }
     };
-    Ok(Production::Terminal(atom))
+    Ok(LoweredProduction::new(Production::Terminal(atom)))
 }
 
-fn lower_field_shape(shape: &FieldShape) -> Result<Production> {
+fn lower_field_shape(shape: &FieldShape) -> Result<LoweredProduction> {
+    let mut defs = Vec::new();
     let args = shape
         .fields()
         .iter()
         .map(|field| {
+            let lowered = lower_shape(field.shape().as_ref())?;
+            defs.extend(lowered.defs);
             Ok(Production::Seq(vec![
                 Production::Terminal(TerminalAtom::Exact(Expr::Symbol(field.name().clone()))),
-                lower_shape(field.shape().as_ref())?,
+                lowered.production,
             ]))
         })
         .collect::<Result<Vec<_>>>()?;
-    Ok(Production::Call {
-        head: Box::new(Production::Terminal(TerminalAtom::Exact(Expr::Symbol(
-            shape
-                .class_symbol()
-                .cloned()
-                .unwrap_or_else(|| Symbol::qualified("shape", "fields")),
-        )))),
-        args,
+    Ok(LoweredProduction {
+        production: Production::Call {
+            head: Box::new(Production::Terminal(TerminalAtom::Exact(Expr::Symbol(
+                shape
+                    .class_symbol()
+                    .cloned()
+                    .unwrap_or_else(|| Symbol::qualified("shape", "fields")),
+            )))),
+            args,
+        },
+        defs,
     })
 }
 
-fn lower_list_shape(shape: &ListShape) -> Result<Production> {
+fn lower_list_shape(shape: &ListShape) -> Result<LoweredProduction> {
+    let mut defs = Vec::new();
     let mut items = shape
         .items()
         .iter()
-        .map(|item| lower_shape(item.as_ref()))
+        .map(|item| {
+            let lowered = lower_shape(item.as_ref())?;
+            defs.extend(lowered.defs);
+            Ok(lowered.production)
+        })
         .collect::<Result<Vec<_>>>()?;
     if let Some(rest) = shape.rest() {
+        let lowered = lower_shape(rest.as_ref())?;
+        defs.extend(lowered.defs);
         items.push(Production::Repeat {
-            inner: Box::new(lower_shape(rest.as_ref())?),
+            inner: Box::new(lowered.production),
             at_least: 0,
         });
     }
-    Ok(Production::Seq(items))
+    Ok(LoweredProduction {
+        production: Production::Seq(items),
+        defs,
+    })
+}
+
+fn render_json_graph(graph: &GrammarGraph) -> Result<String> {
+    let root = render_json_schema(&graph.root)?;
+    if graph.defs.is_empty() {
+        return Ok(root);
+    }
+    let defs = graph
+        .defs
+        .iter()
+        .map(|(name, production)| {
+            Ok(format!(
+                "{}:{}",
+                json_string(&name.to_string()),
+                render_json_schema(production)?
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(format!(
+        r#"{{"allOf":[{}],"$defs":{{{}}}}}"#,
+        root,
+        defs.join(",")
+    ))
 }
 
 fn render_json_schema(production: &Production) -> Result<String> {

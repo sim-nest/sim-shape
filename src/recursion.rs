@@ -17,7 +17,7 @@ use sim_kernel::{Class, ClassId, ClassRef, Cx, Result};
 /// Generous enough for any legitimate finite shape (hand-written grammars and
 /// class hierarchies never approach it) while still bounding the adversarial
 /// self-referential case to a fixed number of stack frames.
-pub(crate) const MAX_SHAPE_DEPTH: usize = 256;
+pub(crate) const MAX_SHAPE_DEPTH: usize = 64;
 
 thread_local! {
     static SHAPE_DEPTH: Cell<usize> = const { Cell::new(0) };

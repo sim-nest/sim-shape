@@ -11,16 +11,18 @@ use sim_kernel::{
 
 use crate::{
     AndShape, AnyShape, ClassShape, ExactExprShape, ExprKind, ExprKindShape, HookedShape,
-    ListShape, MatchHook, MatchHookObject, NotShape, OrShape, OrStrategy, RepeatShape, ShapeObject,
-    TableExtraPolicy, TableFieldSpec, TableShape, VennShapeSet, hook_ref_arc,
-    shape_value_with_encoding,
+    ListShape, MatchHook, MatchHookObject, NotShape, OrShape, OrStrategy, RepeatShape, ShapeDefRef,
+    ShapeDefs, ShapeObject, TableExtraPolicy, TableFieldSpec, TableShape, VennShapeSet,
+    hook_ref_arc, shape_value_with_encoding,
 };
 
+use super::encode_shape_defs;
 use super::{
     and_shape_class_symbol, any_shape_class_symbol, class_shape_class_symbol,
     exact_expr_shape_class_symbol, expr_kind_shape_class_symbol, hooked_shape_class_symbol,
     list_shape_class_symbol, not_shape_class_symbol, or_shape_class_symbol,
-    repeat_shape_class_symbol, table_shape_class_symbol, venn_shape_set_class_symbol,
+    repeat_shape_class_symbol, shape_def_ref_class_symbol, shape_defs_class_symbol,
+    table_shape_class_symbol, venn_shape_set_class_symbol,
 };
 
 impl ObjectEncode for VennShapeSet {
@@ -259,6 +261,21 @@ pub(crate) fn encode_shape_expr(shape: &dyn Shape) -> Result<Expr> {
                 int_expr(repeat.min()),
                 repeat.max().map(int_expr).unwrap_or(Expr::Nil),
             ],
+        ));
+    }
+    if let Some(defs) = shape.as_any().downcast_ref::<ShapeDefs>() {
+        return Ok(constructor_expr(
+            shape_defs_class_symbol(),
+            vec![
+                encode_shape_expr(defs.root().as_ref())?,
+                encode_shape_defs(defs.defs())?,
+            ],
+        ));
+    }
+    if let Some(reference) = shape.as_any().downcast_ref::<ShapeDefRef>() {
+        return Ok(constructor_expr(
+            shape_def_ref_class_symbol(),
+            vec![Expr::Symbol(reference.name().clone())],
         ));
     }
     if let Some(hooked) = shape.as_any().downcast_ref::<HookedShape>() {

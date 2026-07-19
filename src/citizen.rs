@@ -9,6 +9,8 @@ mod codec;
 mod construct;
 #[path = "citizen/inventory.rs"]
 mod inventory;
+#[path = "citizen/recursive_codec.rs"]
+mod recursive_codec;
 
 pub(crate) use class::register_shape_citizen_class;
 pub(crate) use codec::{
@@ -17,6 +19,7 @@ pub(crate) use codec::{
     encode_hooks, encode_shape_expr, encode_shape_list, encode_table_fields, expr_kind_symbol,
     or_strategy_symbol,
 };
+pub(crate) use recursive_codec::{decode_shape_defs, encode_shape_defs};
 
 /// Class symbol for the `Any` shape citizen (`shape/Any`).
 pub fn any_shape_class_symbol() -> sim_kernel::Symbol {
@@ -66,6 +69,16 @@ pub fn not_shape_class_symbol() -> sim_kernel::Symbol {
 /// Class symbol for the repetition shape citizen (`shape/Repeat`).
 pub fn repeat_shape_class_symbol() -> sim_kernel::Symbol {
     sim_kernel::Symbol::qualified("shape", "Repeat")
+}
+
+/// Class symbol for the recursive shape definitions citizen (`shape/Defs`).
+pub fn shape_defs_class_symbol() -> sim_kernel::Symbol {
+    sim_kernel::Symbol::qualified("shape", "Defs")
+}
+
+/// Class symbol for the recursive shape reference citizen (`shape/Ref`).
+pub fn shape_def_ref_class_symbol() -> sim_kernel::Symbol {
+    sim_kernel::Symbol::qualified("shape", "Ref")
 }
 
 /// Class symbol for the hook-wrapped shape citizen (`shape/Hooked`).

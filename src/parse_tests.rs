@@ -266,6 +266,48 @@ fn parse_shape_expr_builds_repeat_bounds_shape() {
 }
 
 #[test]
+fn parse_shape_expr_builds_recursive_defs_and_refs() {
+    let mut cx = cx();
+    let node_ref = qualified_shape_form("ref", vec![symbol_expr("Node")]);
+    let node_shape = shape_form(
+        "or",
+        vec![
+            symbol_expr("Nil"),
+            shape_form("list", vec![symbol_expr("Number"), node_ref.clone()]),
+        ],
+    );
+    let shape = parsed_shape(qualified_shape_form(
+        "defs",
+        vec![
+            Expr::List(vec![Expr::List(vec![symbol_expr("Node"), node_shape])]),
+            node_ref,
+        ],
+    ));
+
+    assert!(
+        shape
+            .check_expr(
+                &mut cx,
+                &Expr::List(vec![
+                    number_expr("1"),
+                    Expr::List(vec![number_expr("2"), Expr::Nil]),
+                ]),
+            )
+            .unwrap()
+            .accepted
+    );
+    assert!(
+        !shape
+            .check_expr(
+                &mut cx,
+                &Expr::List(vec![number_expr("1"), Expr::String("bad".to_owned())]),
+            )
+            .unwrap()
+            .accepted
+    );
+}
+
+#[test]
 fn parse_shape_expr_builds_table_and_table_required_shapes() {
     let mut cx = cx();
     let table = parsed_shape(qualified_shape_form(

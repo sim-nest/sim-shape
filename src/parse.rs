@@ -14,6 +14,7 @@ use crate::primitives::{
     AnyShape, CaptureShape, ClassShape, ExprKindShape, FieldShape, FieldSpec, ListShape,
     NumberValueShape,
 };
+use crate::{ShapeDefRef, ShapeDefs};
 
 /// Build a [`Shape`] from a shape-grammar expression.
 ///
@@ -101,6 +102,8 @@ fn parse_shape_list(items: &[Expr]) -> Result<Arc<dyn Shape>> {
             Ok(Arc::new(RepeatShape::new(parse_shape_expr(&items[1])?)))
         }
         Some("repeat-bounds") => parse_repeat_bounds_shape(head, items),
+        Some("defs") => parse_shape_defs(head, items),
+        Some("ref") => parse_shape_def_ref(head, items),
         Some("table") => parse_single_table_shape(head, items),
         Some("table-required" | "table-open") => {
             parse_table_shape(&items[1..], TableExtraPolicy::Allow)
@@ -178,6 +181,46 @@ fn parse_repeat_bounds_shape(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Sh
         min,
         max,
     )))
+}
+
+fn parse_shape_defs(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    expect_arity(head, items, 3)?;
+    Ok(Arc::new(ShapeDefs::new(
+        parse_shape_expr(&items[2])?,
+        parse_shape_def_entries(&items[1])?,
+    )))
+}
+
+fn parse_shape_def_ref(head: &Symbol, items: &[Expr]) -> Result<Arc<dyn Shape>> {
+    expect_arity(head, items, 2)?;
+    let Expr::Symbol(name) = &items[1] else {
+        return Err(Error::Eval("shape/ref name must be a symbol".to_owned()));
+    };
+    Ok(Arc::new(ShapeDefRef::new(name.clone())))
+}
+
+fn parse_shape_def_entries(expr: &Expr) -> Result<Vec<(Symbol, Arc<dyn Shape>)>> {
+    let Expr::List(entries) = expr else {
+        return Err(Error::Eval(
+            "shape/defs definitions must be a list".to_owned(),
+        ));
+    };
+    entries
+        .iter()
+        .map(|entry| {
+            let Expr::List(items) = entry else {
+                return Err(Error::Eval(
+                    "shape/defs definition must be a list".to_owned(),
+                ));
+            };
+            let [Expr::Symbol(name), shape] = items.as_slice() else {
+                return Err(Error::Eval(
+                    "shape/defs definition must have name and shape".to_owned(),
+                ));
+            };
+            Ok((name.clone(), parse_shape_expr(shape)?))
+        })
+        .collect()
 }
 
 fn parse_table_shape(items: &[Expr], extra: TableExtraPolicy) -> Result<Arc<dyn Shape>> {

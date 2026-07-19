@@ -7,8 +7,8 @@ use sim_kernel::{Cx, Error, Expr, Linker, ObjectEncoding, Result, Symbol, Value}
 
 use crate::{
     AcceptOnNoDiagnosticsHook, AnyShape, DiscardOnDiagnosticPrefixHook, ExactExprShape, ExprKind,
-    OrStrategy, ScoreFloorHook, TableExtraPolicy, TableFieldSpec, TraceMarkHook, VennShapeSet,
-    hook_value,
+    OrStrategy, ScoreFloorHook, ShapeDefRef, TableExtraPolicy, TableFieldSpec, TraceMarkHook,
+    VennShapeSet, hook_value,
 };
 
 use super::construct::{
@@ -16,17 +16,18 @@ use super::construct::{
     construct_and_shape, construct_any_shape, construct_class_shape,
     construct_discard_on_diagnostic_prefix_hook, construct_exact_expr_shape,
     construct_expr_kind_shape, construct_hooked_shape, construct_list_shape, construct_not_shape,
-    construct_or_shape, construct_repeat_shape, construct_score_floor_hook, construct_table_shape,
+    construct_or_shape, construct_repeat_shape, construct_score_floor_hook,
+    construct_shape_def_ref, construct_shape_defs, construct_table_shape,
     construct_trace_mark_hook, construct_venn_shape_set, exact_expr_shape_value,
     expr_kind_shape_value, hooked_shape_value, list_shape_value, not_shape_value, or_shape_value,
-    repeat_shape_value, table_shape_value,
+    repeat_shape_value, shape_def_ref_value, shape_defs_value, table_shape_value,
 };
 use super::{
     and_shape_class_symbol, any_shape_class_symbol, class_shape_class_symbol,
     exact_expr_shape_class_symbol, expr_kind_shape_class_symbol, hooked_shape_class_symbol,
     list_shape_class_symbol, not_shape_class_symbol, or_shape_class_symbol,
-    register_shape_citizen_class, repeat_shape_class_symbol, table_shape_class_symbol,
-    venn_shape_set_class_symbol,
+    register_shape_citizen_class, repeat_shape_class_symbol, shape_def_ref_class_symbol,
+    shape_defs_class_symbol, table_shape_class_symbol, venn_shape_set_class_symbol,
 };
 
 fn shape_fixture_wrong_version(cx: &mut Cx, value: Value) -> Result<()> {
@@ -108,6 +109,21 @@ fn conformance_not_shape(cx: &mut Cx) -> Result<()> {
 
 fn conformance_repeat_shape(cx: &mut Cx) -> Result<()> {
     shape_fixture_wrong_version(cx, repeat_shape_value(Arc::new(AnyShape), 1, Some(2))?)
+}
+
+fn conformance_shape_defs(cx: &mut Cx) -> Result<()> {
+    let node = Symbol::new("Node");
+    shape_fixture_wrong_version(
+        cx,
+        shape_defs_value(
+            Arc::new(ShapeDefRef::new(node.clone())),
+            vec![(node, Arc::new(AnyShape))],
+        )?,
+    )
+}
+
+fn conformance_shape_def_ref(cx: &mut Cx) -> Result<()> {
+    shape_fixture_wrong_version(cx, shape_def_ref_value(Symbol::new("Node")))
 }
 
 fn conformance_hooked_shape(cx: &mut Cx) -> Result<()> {
@@ -242,6 +258,22 @@ register_shape_citizen!(
     repeat_shape_class_symbol(),
     3,
     construct_repeat_shape
+);
+register_shape_citizen!(
+    install_shape_defs_citizen,
+    conformance_shape_defs,
+    "shape/Defs",
+    shape_defs_class_symbol(),
+    2,
+    construct_shape_defs
+);
+register_shape_citizen!(
+    install_shape_def_ref_citizen,
+    conformance_shape_def_ref,
+    "shape/Ref",
+    shape_def_ref_class_symbol(),
+    1,
+    construct_shape_def_ref
 );
 register_shape_citizen!(
     install_hooked_shape_citizen,
