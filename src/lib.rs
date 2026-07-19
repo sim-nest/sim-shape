@@ -52,6 +52,8 @@
 //!   `FunctionCase`, overload selection, and shape-as-value wrapping.
 //! - `hooks` -- match-extension hooks: `HookedShape` and the `MatchHook`
 //!   protocol with the built-in hook implementations.
+//! - `grammar` -- codec-neutral grammar graph lowering plus the seed JSON
+//!   Schema renderer used by existing model-runner contracts.
 //! - `parse` -- the shape grammar parser that turns an `Expr` into a `Shape`
 //!   and runs checks against expressions and values.
 //! - `base` -- the base shape vocabulary re-exported from the kernel
@@ -68,6 +70,7 @@ mod diagnostics;
 mod duplicate_key_tests;
 mod duplicate_keys;
 mod functions;
+mod grammar;
 mod hooks;
 mod options;
 mod parse;
@@ -104,6 +107,10 @@ pub use diagnostics::{
 pub use functions::{
     FunctionCase, FunctionObject, NativeFunctionImpl, SelectedCase, ShapeObject, case_result_shape,
     case_shape, function_cases, overload, shape_value, shape_value_with_encoding,
+};
+pub use grammar::{
+    GrammarDialect, GrammarGraph, GrammarPosition, GrammarTarget, Production, ShapeGrammar,
+    TerminalAtom, shape_grammar_graph, shape_json_schema,
 };
 pub use hooks::{
     AcceptOnNoDiagnosticsHook, DiscardOnDiagnosticPrefixHook, HookedShape, MatchHook,
