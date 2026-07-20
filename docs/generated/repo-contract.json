@@ -170,10 +170,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-12T17:21:11+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "ffab2cf7c9e4cf2ca9805f90ae3b3e423f2f89a7",
+    "git_commit": "5083b4354aad1ced579c838e5eedbb6b517041c0",
     "repo": "sim-shape",
     "schema": "sim.provenance.v1",
-    "source_commit": "ffab2cf7c9e4cf2ca9805f90ae3b3e423f2f89a7",
+    "source_commit": "5083b4354aad1ced579c838e5eedbb6b517041c0",
     "source_remote": "https://github.com/sim-nest/sim-shape",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -186,9 +186,9 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "f97f6b653bf082ad",
+    "workspace_hash": "12630cf6aca25e98",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 59,
+    "workspace_hash_input_count": 60,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "recipes/01-basics/exact-bool-shape/Cargo.toml",
@@ -241,6 +241,7 @@
       "src/primitives/object.rs",
       "src/primitives/tests.rs",
       "src/primitives.rs",
+      "src/query.rs",
       "src/recursion.rs",
       "src/recursive.rs",
       "src/tests/core.rs",

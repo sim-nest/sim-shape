@@ -56,6 +56,7 @@
 //!   Schema renderer used by existing model-runner contracts.
 //! - `parse` -- the shape grammar parser that turns an `Expr` into a `Shape`
 //!   and runs checks against expressions and values.
+//! - `query` -- reusable Shape relation predicates for scoped retrieval.
 //! - `recursive` -- recursive shape descriptors with named definitions and
 //!   bounded reference checks.
 //! - `base` -- the base shape vocabulary re-exported from the kernel
@@ -79,6 +80,7 @@ mod parse;
 #[cfg(test)]
 mod parse_tests;
 mod primitives;
+mod query;
 mod recursion;
 mod recursive;
 #[cfg(test)]
@@ -129,4 +131,5 @@ pub use primitives::{
     AnyShape, CaptureShape, ClassShape, EffectfulShape, ExactExprShape, ExprKindShape, FieldShape,
     FieldSpec, ListShape, NumberValueShape, ObjectExpr, OneOfShape, PrattShape, ShapeExprParser,
 };
+pub use query::{ShapeQueryRelation, shape_query_matches};
 pub use recursive::{ShapeDefRef, ShapeDefs};
