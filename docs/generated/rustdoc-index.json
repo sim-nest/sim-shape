@@ -16,6 +16,13 @@
       "summary": "Runnable exact boolean shape cookbook recipe."
     },
     {
+      "crate_name": "sim-shape-recipe-shape-grammar-contract",
+      "group": "workspace",
+      "manifest": "recipes/01-basics/shape-grammar-contract/Cargo.toml",
+      "package": "sim-shape-recipe-shape-grammar-contract",
+      "summary": "Runnable Shape grammar contract cookbook recipe."
+    },
+    {
       "crate_name": "xtask",
       "group": "workspace",
       "manifest": "xtask/Cargo.toml",

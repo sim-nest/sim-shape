@@ -1,0 +1,6 @@
+grammar graph defs: 0
+json schema rendered: true
+json gbnf rendered: true
+lisp grammar rendered: true
+good value accepted: true
+bad value accepted: false

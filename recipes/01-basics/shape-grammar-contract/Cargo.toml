@@ -1,0 +1,19 @@
+[package]
+name = "sim-shape-recipe-shape-grammar-contract"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+description = "Runnable Shape grammar contract cookbook recipe."
+readme = "README.md"
+publish = false
+
+[dependencies]
+sim-codec = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
+sim-codec-json = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
+sim-codec-lisp = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
+sim-kernel = "0.1.0"
+sim-shape = "0.1.2"
+sim-test-support = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
+
+[lints]
+workspace = true

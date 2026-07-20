@@ -31,6 +31,7 @@
     "workspace": [
       "sim-shape",
       "sim-shape-recipe-exact-bool-shape",
+      "sim-shape-recipe-shape-grammar-contract",
       "xtask"
     ]
   },
@@ -45,7 +46,7 @@
       "reason": "may wrap custom live hook code; built-in pure hook descriptors use shape/*Hook citizens"
     }
   ],
-  "package_count": 3,
+  "package_count": 4,
   "packages": [
     {
       "crate_name": "sim_shape",
@@ -110,6 +111,33 @@
       ]
     },
     {
+      "crate_name": "sim-shape-recipe-shape-grammar-contract",
+      "dependencies": [],
+      "description": "Runnable Shape grammar contract cookbook recipe.",
+      "features": [],
+      "group": "workspace",
+      "manifest": "recipes/01-basics/shape-grammar-contract/Cargo.toml",
+      "name": "sim-shape-recipe-shape-grammar-contract",
+      "publish": "false",
+      "root": "recipes/01-basics/shape-grammar-contract",
+      "rustdoc_summary": "Runnable Shape grammar contract cookbook recipe.",
+      "target_kinds": [
+        "bin"
+      ],
+      "targets": [
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "kind": [
+            "bin"
+          ],
+          "name": "sim-shape-recipe-shape-grammar-contract",
+          "src": "recipes/01-basics/shape-grammar-contract/src/main.rs"
+        }
+      ]
+    },
+    {
       "crate_name": "xtask",
       "dependencies": [],
       "description": "SIM workspace package for xtask.",
@@ -142,10 +170,10 @@
     "generated_by": "cargo run -p xtask -- simdoc",
     "generation_timestamp": "2026-07-12T17:21:11+02:00",
     "generator": "xtask repo-contract v1",
-    "git_commit": "746fd5e9f1fbfa087012318d223dc28a87ddca20",
+    "git_commit": "ffab2cf7c9e4cf2ca9805f90ae3b3e423f2f89a7",
     "repo": "sim-shape",
     "schema": "sim.provenance.v1",
-    "source_commit": "746fd5e9f1fbfa087012318d223dc28a87ddca20",
+    "source_commit": "ffab2cf7c9e4cf2ca9805f90ae3b3e423f2f89a7",
     "source_remote": "https://github.com/sim-nest/sim-shape",
     "validation_commands": [
       "cargo fmt --all --check",
@@ -158,13 +186,15 @@
       "cargo run -p xtask -- validation-matrix --check --repo .",
       "cargo run -p xtask -- crate-catalog --check --repo ."
     ],
-    "workspace_hash": "16e06b05edb53c11",
+    "workspace_hash": "f97f6b653bf082ad",
     "workspace_hash_algorithm": "fnv1a64",
-    "workspace_hash_input_count": 57,
+    "workspace_hash_input_count": 59,
     "workspace_hash_inputs": [
       "Cargo.toml",
       "recipes/01-basics/exact-bool-shape/Cargo.toml",
       "recipes/01-basics/exact-bool-shape/recipe.toml",
+      "recipes/01-basics/shape-grammar-contract/Cargo.toml",
+      "recipes/01-basics/shape-grammar-contract/recipe.toml",
       "recipes/book.toml",
       "src/algebra/boolean.rs",
       "src/algebra/collection.rs",
@@ -229,7 +259,7 @@
       "card_id": "cookbook/sim-shape",
       "group": "workspace",
       "package": "sim-shape",
-      "recipe_count": 1,
+      "recipe_count": 2,
       "recipes": [
         {
           "card_id": "sim-shape/01-basics/exact-bool-shape",
@@ -238,6 +268,14 @@
           "package": "sim-shape",
           "recipe_toml": "recipes/01-basics/exact-bool-shape/recipe.toml",
           "title": "Parsed and exact boolean shape"
+        },
+        {
+          "card_id": "sim-shape/01-basics/shape-grammar-contract",
+          "codec": "rust",
+          "id": "shape-grammar-contract",
+          "package": "sim-shape",
+          "recipe_toml": "recipes/01-basics/shape-grammar-contract/recipe.toml",
+          "title": "Shape grammar contract"
         }
       ],
       "summary": "Runnable shape matching examples.",

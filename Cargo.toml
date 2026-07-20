@@ -13,6 +13,7 @@ homepage = "https://github.com/sim-nest/sim-shape"
 resolver = "3"
 members = [
   "recipes/01-basics/exact-bool-shape",
+  "recipes/01-basics/shape-grammar-contract",
   "xtask",
 ]
 
