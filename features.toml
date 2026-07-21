@@ -1,0 +1,31 @@
+schema = "sim.features"
+
+[enforcement.audience]
+framework = "strict"
+
+[enforcement.route]
+major_entrypoints = "advisory"
+frameworks = "advisory"
+
+[[feature]]
+id = "feature/sim-shape/shape"
+title = "Shape framework"
+summary = "Define reusable Shape matching, binding, citizen projection, and grammar contracts for runtime values."
+owner = "crate/sim-shape"
+audiences = ["code", "framework"]
+guidance = "Use this row when a framework needs a reusable matcher or object-accessible shape contract."
+claims_anchors = [
+  "anchor/crate/sim-shape",
+]
+claims_specimens = [
+  "spec-test/sim-shape/src/citizen/inventory",
+]
+
+[[route]]
+id = "route/add-shape-contract"
+task = "Add a Shape contract"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-shape/shape", why = "The Shape row owns matching, binding, and citizen projection." },
+  { specimen = "spec-test/sim-shape/src/citizen/inventory", why = "The inventory test checks the exported shape citizen surface." },
+]
