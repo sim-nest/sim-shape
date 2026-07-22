@@ -6,15 +6,11 @@ mod object;
 use std::sync::Arc;
 
 use sim_kernel::{
-    CORE_LIST_CLASS_ID, ClassId, ClassRef, Cx, DefaultFactory, Expr, LengthResult, ListValue,
-    NoopEvalPolicy, NumberLiteral, Object, PreparedArgs, Result, Symbol, Value,
+    CORE_LIST_CLASS_ID, ClassId, ClassRef, Cx, Expr, LengthResult, ListValue, NumberLiteral,
+    Object, PreparedArgs, Result, Symbol, Value, testing::bare_cx as cx,
 };
 
 use crate::{Bindings, ClassShape, ShapeExprParser};
-
-fn cx() -> Cx {
-    Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory))
-}
 
 fn number_value(cx: &mut Cx, text: &str) -> Value {
     cx.factory()

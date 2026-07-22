@@ -1,6 +1,8 @@
 use std::sync::{Arc, Mutex};
 
-use sim_kernel::{Cx, Diagnostic, Expr, NoopEvalPolicy, Result, Value, shape_is_subshape_of};
+use sim_kernel::{
+    Cx, Diagnostic, Expr, Result, Value, shape_is_subshape_of, testing::bare_cx as cx,
+};
 
 use crate::{
     AcceptOnNoDiagnosticsHook, AnyShape, DiscardOnDiagnosticPrefixHook, ExactExprShape, ExprKind,
@@ -8,13 +10,6 @@ use crate::{
     MatchHookPhase, MatchHookTargetKind, MatchScore, ScoreFloorHook, Shape, ShapeDoc, ShapeMatch,
     TraceMarkHook, hook_value,
 };
-
-fn cx() -> Cx {
-    Cx::new(
-        Arc::new(NoopEvalPolicy),
-        Arc::new(sim_kernel::DefaultFactory),
-    )
-}
 
 #[test]
 fn hooked_shape_preserves_plain_inner_acceptance_when_hooks_pass() {

@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use sim_citizen::{CitizenLib, value_from_expr};
 use sim_kernel::{
-    CapabilitySet, Cx, DefaultFactory, Error, Expr, NoopEvalPolicy, ObjectEncoding, Shape,
-    ShapeDoc, ShapeMatch, Symbol, Value, read_construct_capability,
+    CapabilitySet, Cx, Error, Expr, ObjectEncoding, Shape, ShapeDoc, ShapeMatch, Symbol, Value,
+    read_construct_capability, testing::bare_cx,
 };
 
 use crate::{
@@ -20,7 +20,7 @@ use crate::{
 };
 
 fn cx() -> Cx {
-    let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+    let mut cx = bare_cx();
     cx.load_lib(&CitizenLib::all()).unwrap();
     cx
 }
@@ -610,6 +610,6 @@ fn shape_read_construct_is_capability_gated() {
 
 #[test]
 fn shape_citizens_pass_universal_conformance() {
-    let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+    let mut cx = bare_cx();
     sim_citizen::run_registered_conformance(&mut cx).unwrap();
 }
