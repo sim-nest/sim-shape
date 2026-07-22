@@ -1,16 +1,12 @@
 use std::sync::Arc;
 
-use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy, Result, Symbol, shape_is_subshape_of};
+use sim_kernel::{Cx, Expr, Result, Symbol, shape_is_subshape_of, testing::bare_cx as cx};
 
 use crate::{AnyShape, EffectfulShape, Shape};
 
 use super::{
     CaptureShape, FieldShape, FieldSpec, ListShape, OneOfShape, PrattShape, ShapeExprParser,
 };
-
-fn cx() -> Cx {
-    Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory))
-}
 
 fn effectful_child() -> Arc<dyn Shape> {
     Arc::new(EffectfulShape::new(Arc::new(AnyShape)))

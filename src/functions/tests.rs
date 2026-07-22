@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use sim_kernel::{
     Callable, CaseId, Cx, DefaultFactory, Demand, Diagnostic, Expr, FunctionId, HybridPolicy,
-    NoopEvalPolicy, NumberLiteral, PreparedArgs, RawArgs, Result, Symbol, Value,
+    NumberLiteral, PreparedArgs, RawArgs, Result, Symbol, Value, testing::bare_cx as cx,
 };
 
 use crate::{
@@ -10,10 +10,6 @@ use crate::{
     ExprKind, ExprKindShape, FunctionCase, FunctionObject, HookedShape, ListShape, MatchScore,
     Shape, ShapeDoc, ShapeMatch,
 };
-
-fn cx() -> Cx {
-    Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory))
-}
 
 fn hybrid_cx() -> Cx {
     Cx::new(Arc::new(HybridPolicy), Arc::new(DefaultFactory))
