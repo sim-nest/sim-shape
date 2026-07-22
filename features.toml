@@ -2,6 +2,7 @@ schema = "sim.features"
 
 [enforcement.audience]
 framework = "strict"
+code = "strict"
 
 [enforcement.route]
 major_entrypoints = "advisory"
@@ -16,9 +17,62 @@ audiences = ["code", "framework"]
 guidance = "Use this row when a framework needs a reusable matcher or object-accessible shape contract."
 claims_anchors = [
   "anchor/crate/sim-shape",
+  "anchor/export/sim-shape/citizen/class.rs",
+  "anchor/export/sim-shape/citizen/codec.rs",
+  "anchor/export/sim-shape/citizen/construct.rs",
+  "anchor/export/sim-shape/citizen/inventory.rs",
+  "anchor/export/sim-shape/citizen/recursive_codec.rs",
+  "anchor/export/sim-shape/shape/accept-on-no-diagnostics-hook",
+  "anchor/export/sim-shape/shape/and",
+  "anchor/export/sim-shape/shape/any",
+  "anchor/export/sim-shape/shape/class",
+  "anchor/export/sim-shape/shape/defs",
+  "anchor/export/sim-shape/shape/discard-on-diagnostic-prefix-hook",
+  "anchor/export/sim-shape/shape/exact-expr",
+  "anchor/export/sim-shape/shape/expr-kind",
+  "anchor/export/sim-shape/shape/hooked",
+  "anchor/export/sim-shape/shape/list",
+  "anchor/export/sim-shape/shape/live-hook",
+  "anchor/export/sim-shape/shape/not",
+  "anchor/export/sim-shape/shape/or",
+  "anchor/export/sim-shape/shape/ref",
+  "anchor/export/sim-shape/shape/repeat",
+  "anchor/export/sim-shape/shape/score-floor-hook",
+  "anchor/export/sim-shape/shape/table",
+  "anchor/export/sim-shape/shape/trace-mark-hook",
+  "anchor/export/sim-shape/shape/venn",
 ]
 claims_specimens = [
   "spec-test/sim-shape/src/citizen/inventory",
+]
+
+[[feature]]
+id = "feature/sim-shape/shape-recipes"
+title = "Shape recipe crates"
+summary = "Carry runnable Shape recipe crates used as checked examples for exact booleans and grammar contracts."
+owner = "crate/sim-shape-recipe-exact-bool-shape"
+audiences = ["code"]
+guidance = "Use this row when a code example needs a standalone Shape recipe crate."
+claims_anchors = [
+  "anchor/crate/sim-shape-recipe-exact-bool-shape",
+  "anchor/crate/sim-shape-recipe-shape-grammar-contract",
+]
+supports = [
+  "feature/sim-shape/shape",
+]
+
+[[feature]]
+id = "feature/sim-shape/contract-emitter"
+title = "Shape contract emitter"
+summary = "Emit generated repository contract and index fragments for Shape crates."
+owner = "crate/xtask"
+audiences = ["code"]
+guidance = "Use this row when refreshing generated Shape contract evidence."
+claims_anchors = [
+  "anchor/crate/xtask",
+]
+supports = [
+  "feature/sim-shape/shape",
 ]
 
 [[route]]
@@ -27,5 +81,15 @@ task = "Add a Shape contract"
 audiences = ["code", "framework"]
 steps = [
   { feature = "feature/sim-shape/shape", why = "The Shape row owns matching, binding, and citizen projection." },
+  { feature = "feature/sim-shape/contract-emitter", why = "The emitter row keeps Shape contract evidence current." },
   { specimen = "spec-test/sim-shape/src/citizen/inventory", why = "The inventory test checks the exported shape citizen surface." },
+]
+
+[[route]]
+id = "route/add-shape-recipe"
+task = "Add a Shape recipe"
+audiences = ["code"]
+steps = [
+  { feature = "feature/sim-shape/shape-recipes", why = "The recipe row owns standalone Shape example crates." },
+  { feature = "feature/sim-shape/shape", why = "The Shape row owns the contract the recipe demonstrates." },
 ]

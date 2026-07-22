@@ -18,6 +18,8 @@ This generated lane consumes `docs/generated/sim-index-fragment.sx`. Global inde
 | Feature | Subject | Specimens | Summary |
 | --- | --- | ---: | --- |
 | `feature/sim-shape/shape` | `crate/sim-shape` | 1 | Define reusable Shape matching, binding, citizen projection, and grammar contracts for runtime values. |
+| `feature/sim-shape/shape-recipes` | `crate/sim-shape-recipe-exact-bool-shape` | 0 | Carry runnable Shape recipe crates used as checked examples for exact booleans and grammar contracts. |
+| `feature/sim-shape/contract-emitter` | `crate/xtask` | 0 | Emit generated repository contract and index fragments for Shape crates. |
 
 ## Surfaces
 
