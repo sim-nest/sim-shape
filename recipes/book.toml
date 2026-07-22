@@ -1,0 +1,5 @@
+book = "sim-shape"
+title = "Shape recipes"
+summary = "Runnable shape matching examples."
+order = 220
+chapters = ["01-basics"]

@@ -1,5 +1,33 @@
 {
-  "schema": "sim.rustdoc-index.v1",
-  "repo": "sim-shape",
-  "target_doc": "target/doc/"
+  "generator": "xtask repo-contract v1",
+  "packages": [
+    {
+      "crate_name": "sim_shape",
+      "group": "workspace",
+      "manifest": "Cargo.toml",
+      "package": "sim-shape",
+      "summary": "Shape algebra, comparison, and match-hook helpers."
+    },
+    {
+      "crate_name": "sim-shape-recipe-exact-bool-shape",
+      "group": "workspace",
+      "manifest": "recipes/01-basics/exact-bool-shape/Cargo.toml",
+      "package": "sim-shape-recipe-exact-bool-shape",
+      "summary": "Runnable exact boolean shape cookbook recipe."
+    },
+    {
+      "crate_name": "sim-shape-recipe-shape-grammar-contract",
+      "group": "workspace",
+      "manifest": "recipes/01-basics/shape-grammar-contract/Cargo.toml",
+      "package": "sim-shape-recipe-shape-grammar-contract",
+      "summary": "Runnable Shape grammar contract cookbook recipe."
+    },
+    {
+      "crate_name": "xtask",
+      "group": "workspace",
+      "manifest": "xtask/Cargo.toml",
+      "package": "xtask",
+      "summary": "SIM workspace package for xtask."
+    }
+  ]
 }

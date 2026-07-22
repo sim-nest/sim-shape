@@ -4,6 +4,7 @@
 use std::sync::Arc;
 
 use crate::base::{MatchScore, Shape, ShapeDoc, ShapeMatch};
+use crate::duplicate_keys::{reject_duplicate_expr_symbol_keys, reject_duplicate_symbol_keys};
 use sim_kernel::{Cx, Expr, Result, Symbol, Value};
 
 /// The decoded form of an object expression: a class symbol and its fields.
@@ -39,17 +40,23 @@ impl ObjectExpr {
         }
     }
 
-    /// Decode an `expr/object` extension expression, or `None` if it is not one.
+    /// Decode an `expr/object` extension expression, or `None` if it is not a
+    /// well-formed object expression.
     pub fn parse(expr: &Expr) -> Option<Self> {
+        Self::parse_checked(expr).ok().flatten()
+    }
+
+    pub(crate) fn parse_checked(expr: &Expr) -> Result<Option<Self>> {
         let Expr::Extension { tag, payload } = expr else {
-            return None;
+            return Ok(None);
         };
         if *tag != Symbol::qualified("expr", "object") {
-            return None;
+            return Ok(None);
         }
         let Expr::Map(entries) = payload.as_ref() else {
-            return None;
+            return Ok(None);
         };
+        reject_duplicate_expr_symbol_keys(entries, "shape-object")?;
         let mut class = None;
         let mut fields = None;
         for (key, value) in entries {
@@ -63,6 +70,7 @@ impl ObjectExpr {
             } else if *key == Symbol::new("fields")
                 && let Expr::Map(entries) = value
             {
+                reject_duplicate_expr_symbol_keys(entries, "shape-object fields")?;
                 let parsed = entries
                     .iter()
                     .map(|(field, value)| match field {
@@ -73,10 +81,13 @@ impl ObjectExpr {
                 fields = parsed;
             }
         }
-        Some(Self {
-            class: class?,
-            fields: fields?,
-        })
+        let Some(class) = class else {
+            return Ok(None);
+        };
+        let Some(fields) = fields else {
+            return Ok(None);
+        };
+        Ok(Some(Self { class, fields }))
     }
 
     /// The expression bound to the named field, if present.
@@ -158,7 +169,14 @@ impl FieldShape {
         cx: &mut Cx,
         class: Option<&Symbol>,
         entries: &[(Symbol, Expr)],
+        context: &str,
     ) -> Result<ShapeMatch> {
+        match reject_duplicate_symbol_keys(entries, context) {
+            Ok(()) => {}
+            Err(sim_kernel::Error::Eval(message)) => return Ok(ShapeMatch::reject(message)),
+            Err(err) => return Err(err),
+        }
+
         if let Some(expected) = &self.class
             && class != Some(expected)
         {
@@ -188,14 +206,28 @@ impl FieldShape {
 }
 
 impl Shape for FieldShape {
+    fn is_effectful(&self) -> bool {
+        self.fields.iter().any(|field| field.shape.is_effectful())
+    }
+
     fn check_value(&self, cx: &mut Cx, value: Value) -> Result<ShapeMatch> {
         let expr = value.object().as_expr(cx)?;
         self.check_expr(cx, &expr)
     }
 
     fn check_expr(&self, cx: &mut Cx, expr: &Expr) -> Result<ShapeMatch> {
-        if let Some(object) = ObjectExpr::parse(expr) {
-            return self.match_entries(cx, Some(&object.class), &object.fields);
+        match ObjectExpr::parse_checked(expr) {
+            Ok(Some(object)) => {
+                return self.match_entries(
+                    cx,
+                    Some(&object.class),
+                    &object.fields,
+                    "shape-object fields",
+                );
+            }
+            Ok(None) => {}
+            Err(sim_kernel::Error::Eval(message)) => return Ok(ShapeMatch::reject(message)),
+            Err(err) => return Err(err),
         }
         if self.class.is_none()
             && let Expr::Map(entries) = expr
@@ -208,7 +240,7 @@ impl Shape for FieldShape {
                 })
                 .collect::<Option<Vec<_>>>();
             if let Some(entries) = entries {
-                return self.match_entries(cx, None, &entries);
+                return self.match_entries(cx, None, &entries, "shape-fields");
             }
         }
         Ok(ShapeMatch::reject("expected object fields"))

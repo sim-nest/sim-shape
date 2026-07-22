@@ -51,10 +51,19 @@ selection (functions), and match-extension hooks (hooks).
 
 ## Validation
 
-These commands run in the constellation workspace; only `sim-kernel` builds from a lone clone today (see `DEVELOPING.md` in `sim-sdk`). A single-repo build lands with the first crates.io publish.
+This repo validates from a single clone against the SIM crates published on
+crates.io. CI installs the channel named by `rust-toolchain.toml` instead of a
+floating stable toolchain. The generated-doc check delegates to the shared
+`sim-tooling` encoder; CI checks out `sim-nest/sim-tooling` and sets
+`SIMDOC_TOOLING_MANIFEST`, while local runs can use either a sibling
+`sim-tooling` checkout or the same environment variable.
 
 ```bash
-cargo fmt --check && cargo test --workspace && cargo clippy --workspace -- -D warnings && cargo doc --workspace --no-deps
+cargo fmt --all --check
+cargo test --workspace
+cargo test --workspace --all-features
+cargo clippy --workspace --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 cargo run -p xtask -- simdoc --check
 ```
 
@@ -87,6 +96,9 @@ public item, field, and variant must be documented for the crate to build.
 
 ### Examples and recipes
 
-The crate's examples are its rustdoc doctests. sim-shape ships no `recipes/`
-tree; recipes that exercise shapes end to end live in the crates that load a
-codec and a runtime to evaluate them.
+The crate's compact examples are rustdoc doctests. The `recipes/` lane carries a
+runnable Rust recipe that checks an exact boolean shape from a standalone clone:
+
+```bash
+cargo run --manifest-path recipes/01-basics/exact-bool-shape/Cargo.toml
+```

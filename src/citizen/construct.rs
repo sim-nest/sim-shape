@@ -9,17 +9,19 @@ use sim_kernel::{Cx, Expr, Result, Shape, Symbol, Value};
 use crate::{
     AcceptOnNoDiagnosticsHook, AndShape, AnyShape, ClassShape, DiscardOnDiagnosticPrefixHook,
     ExactExprShape, ExprKind, ExprKindShape, HookedShape, ListShape, NotShape, OrShape, OrStrategy,
-    RepeatShape, ScoreFloorHook, TableExtraPolicy, TableFieldSpec, TableShape, TraceMarkHook,
-    VennShapeSet, hook_value,
+    RepeatShape, ScoreFloorHook, ShapeDefRef, ShapeDefs, TableExtraPolicy, TableFieldSpec,
+    TableShape, TraceMarkHook, VennShapeSet, hook_value,
 };
 
 use super::{
     and_shape_class_symbol, any_shape_class_symbol, build_shape_value, class_shape_class_symbol,
-    decode_expr_kind, decode_extra, decode_hooks, decode_shape_list, decode_shape_value,
-    decode_symbol, decode_table_fields, decode_venn_members, exact_expr_shape_class_symbol,
-    expr_kind_shape_class_symbol, expr_kind_symbol, hooked_shape_class_symbol,
-    list_shape_class_symbol, not_shape_class_symbol, or_shape_class_symbol, or_strategy_symbol,
-    repeat_shape_class_symbol, table_shape_class_symbol, venn_shape_set_class_symbol,
+    decode_expr_kind, decode_extra, decode_hooks, decode_shape_defs, decode_shape_list,
+    decode_shape_value, decode_symbol, decode_table_fields, decode_venn_members,
+    exact_expr_shape_class_symbol, expr_kind_shape_class_symbol, expr_kind_symbol,
+    hooked_shape_class_symbol, list_shape_class_symbol, not_shape_class_symbol,
+    or_shape_class_symbol, or_strategy_symbol, repeat_shape_class_symbol,
+    shape_def_ref_class_symbol, shape_defs_class_symbol, table_shape_class_symbol,
+    venn_shape_set_class_symbol,
 };
 
 fn fields<'a>(
@@ -212,6 +214,45 @@ pub(super) fn construct_repeat_shape(cx: &mut Cx, args: Vec<Value>) -> Result<Va
         usize::decode_field_value(cx, fields[1].clone(), "min")?,
         Option::<usize>::decode_field_value(cx, fields[2].clone(), "max")?,
     )
+}
+
+pub(super) fn shape_defs_value(
+    root: Arc<dyn Shape>,
+    defs: Vec<(Symbol, Arc<dyn Shape>)>,
+) -> Result<Value> {
+    Ok(build_shape_value(
+        shape_defs_class_symbol(),
+        Arc::new(ShapeDefs::new(root.clone(), defs.clone())),
+        vec![
+            super::encode_shape_expr(root.as_ref())?,
+            super::encode_shape_defs(&defs)?,
+        ],
+    ))
+}
+
+pub(super) fn construct_shape_defs(cx: &mut Cx, args: Vec<Value>) -> Result<Value> {
+    let fields = fields(cx, shape_defs_class_symbol(), &args, 2)?;
+    shape_defs_value(
+        decode_shape_value(cx, fields[0].clone(), "root")?,
+        decode_shape_defs(cx, fields[1].clone())?,
+    )
+}
+
+pub(super) fn shape_def_ref_value(name: Symbol) -> Value {
+    build_shape_value(
+        shape_def_ref_class_symbol(),
+        Arc::new(ShapeDefRef::new(name.clone())),
+        vec![Expr::Symbol(name)],
+    )
+}
+
+pub(super) fn construct_shape_def_ref(cx: &mut Cx, args: Vec<Value>) -> Result<Value> {
+    let fields = fields(cx, shape_def_ref_class_symbol(), &args, 1)?;
+    Ok(shape_def_ref_value(decode_symbol(
+        cx,
+        fields[0].clone(),
+        "name",
+    )?))
 }
 
 pub(super) fn hooked_shape_value(

@@ -11,16 +11,18 @@ use sim_kernel::{
 
 use crate::{
     AndShape, AnyShape, ClassShape, ExactExprShape, ExprKind, ExprKindShape, HookedShape,
-    ListShape, MatchHook, MatchHookObject, NotShape, OrShape, OrStrategy, RepeatShape, ShapeObject,
-    TableExtraPolicy, TableFieldSpec, TableShape, VennShapeSet, hook_ref_arc,
-    shape_value_with_encoding,
+    ListShape, MatchHook, MatchHookObject, NotShape, OrShape, OrStrategy, RepeatShape, ShapeDefRef,
+    ShapeDefs, ShapeObject, TableExtraPolicy, TableFieldSpec, TableShape, VennShapeSet,
+    hook_ref_arc, shape_value_with_encoding,
 };
 
+use super::encode_shape_defs;
 use super::{
     and_shape_class_symbol, any_shape_class_symbol, class_shape_class_symbol,
     exact_expr_shape_class_symbol, expr_kind_shape_class_symbol, hooked_shape_class_symbol,
     list_shape_class_symbol, not_shape_class_symbol, or_shape_class_symbol,
-    repeat_shape_class_symbol, table_shape_class_symbol, venn_shape_set_class_symbol,
+    repeat_shape_class_symbol, shape_def_ref_class_symbol, shape_defs_class_symbol,
+    table_shape_class_symbol, venn_shape_set_class_symbol,
 };
 
 impl ObjectEncode for VennShapeSet {
@@ -131,48 +133,36 @@ pub(crate) fn decode_shape_value(
         return Ok(shape.shape.clone());
     }
     if let Some(shape) = value.object().as_shape() {
-        return clone_supported_shape(shape, field);
+        return clone_supported_shape(cx, shape, field);
     }
     let expr = value.object().as_expr(cx)?;
     let constructed = construct_from_expr(cx, &expr, field)?;
-    constructed
+    extract_shape(constructed, field)
+}
+
+fn extract_shape(value: Value, field: &'static str) -> Result<Arc<dyn Shape>> {
+    value
         .object()
         .downcast_ref::<ShapeObject>()
         .map(|shape| shape.shape.clone())
         .ok_or_else(|| field_error(field, "constructor did not produce a shape value"))
 }
 
-fn clone_supported_shape(shape: &dyn Shape, field: &'static str) -> Result<Arc<dyn Shape>> {
-    if shape.as_any().is::<AnyShape>() {
-        return Ok(Arc::new(AnyShape));
+fn clone_supported_shape(
+    cx: &mut Cx,
+    shape: &dyn Shape,
+    field: &'static str,
+) -> Result<Arc<dyn Shape>> {
+    let expr = encode_shape_expr(shape).map_err(|err| shape_field_error(field, err))?;
+    let constructed = construct_from_expr(cx, &expr, field)?;
+    extract_shape(constructed, field)
+}
+
+fn shape_field_error(field: &'static str, err: Error) -> Error {
+    match err {
+        Error::Eval(message) => field_error(field, message),
+        other => other,
     }
-    if let Some(exact) = shape.as_any().downcast_ref::<ExactExprShape>() {
-        return Ok(Arc::new(ExactExprShape::new(exact.expected().clone())));
-    }
-    if let Some(kind) = shape.as_any().downcast_ref::<ExprKindShape>() {
-        return Ok(Arc::new(ExprKindShape::new(kind.kind().clone())));
-    }
-    if let Some(class) = shape.as_any().downcast_ref::<ClassShape>() {
-        return Ok(Arc::new(ClassShape::new(class.symbol().clone())));
-    }
-    if let Some(list) = shape.as_any().downcast_ref::<ListShape>() {
-        let items = list
-            .items()
-            .iter()
-            .map(|item| clone_supported_shape(item.as_ref(), field))
-            .collect::<Result<Vec<_>>>()?;
-        return Ok(match list.rest() {
-            Some(rest) => Arc::new(ListShape::with_rest(
-                items,
-                clone_supported_shape(rest.as_ref(), field)?,
-            )),
-            None => Arc::new(ListShape::new(items)),
-        });
-    }
-    Err(field_error(
-        field,
-        "shape value is not one of the citizen-supported pure descriptors",
-    ))
 }
 
 fn construct_from_expr(cx: &mut Cx, expr: &Expr, field: &'static str) -> Result<Value> {
@@ -271,6 +261,21 @@ pub(crate) fn encode_shape_expr(shape: &dyn Shape) -> Result<Expr> {
                 int_expr(repeat.min()),
                 repeat.max().map(int_expr).unwrap_or(Expr::Nil),
             ],
+        ));
+    }
+    if let Some(defs) = shape.as_any().downcast_ref::<ShapeDefs>() {
+        return Ok(constructor_expr(
+            shape_defs_class_symbol(),
+            vec![
+                encode_shape_expr(defs.root().as_ref())?,
+                encode_shape_defs(defs.defs())?,
+            ],
+        ));
+    }
+    if let Some(reference) = shape.as_any().downcast_ref::<ShapeDefRef>() {
+        return Ok(constructor_expr(
+            shape_def_ref_class_symbol(),
+            vec![Expr::Symbol(reference.name().clone())],
         ));
     }
     if let Some(hooked) = shape.as_any().downcast_ref::<HookedShape>() {

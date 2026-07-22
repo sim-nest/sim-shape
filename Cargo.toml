@@ -1,6 +1,6 @@
 [package]
 name = "sim-shape"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MPL-2.0"
 description = "Shape algebra, comparison, and match-hook helpers."
@@ -12,6 +12,8 @@ homepage = "https://github.com/sim-nest/sim-shape"
 [workspace]
 resolver = "3"
 members = [
+  "recipes/01-basics/exact-bool-shape",
+  "recipes/01-basics/shape-grammar-contract",
   "xtask",
 ]
 

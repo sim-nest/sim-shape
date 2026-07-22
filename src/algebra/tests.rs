@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sim_kernel::{Cx, Expr, NumberLiteral, Symbol};
+use sim_kernel::{Cx, Expr, NumberLiteral, Symbol, shape_is_subshape_of};
 
 use crate::{
     AndShape, AnyShape, CaptureShape, ExactExprShape, ExprKind, ExprKindShape, NotShape,
@@ -274,6 +274,155 @@ fn table_shape_checks_extra_values_under_shape_policy() {
     let matched = shape.check_value(&mut cx, table).unwrap();
 
     assert!(matched.accepted);
+}
+
+#[test]
+fn table_closed_child_extra_key_is_not_subshape_of_closed_parent() {
+    let mut cx = cx();
+    let child = TableShape::new(
+        vec![TableFieldSpec {
+            key: Symbol::new("y"),
+            shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+            required: true,
+        }],
+        TableExtraPolicy::Reject,
+    );
+    let parent = TableShape::new(Vec::new(), TableExtraPolicy::Reject);
+
+    assert!(!shape_is_subshape_of(&mut cx, &child, &parent).unwrap());
+}
+
+#[test]
+fn table_optional_parent_field_requires_child_to_reject_or_check_key() {
+    let mut cx = cx();
+    let parent = TableShape::new(
+        vec![
+            TableFieldSpec {
+                key: Symbol::new("x"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: true,
+            },
+            TableFieldSpec {
+                key: Symbol::new("y"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: false,
+            },
+        ],
+        TableExtraPolicy::Reject,
+    );
+    let rejecting_child = TableShape::new(
+        vec![TableFieldSpec {
+            key: Symbol::new("x"),
+            shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+            required: true,
+        }],
+        TableExtraPolicy::Reject,
+    );
+    let checked_child = TableShape::new(
+        vec![
+            TableFieldSpec {
+                key: Symbol::new("x"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: true,
+            },
+            TableFieldSpec {
+                key: Symbol::new("y"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: false,
+            },
+        ],
+        TableExtraPolicy::Reject,
+    );
+    let incompatible_child = TableShape::new(
+        vec![
+            TableFieldSpec {
+                key: Symbol::new("x"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: true,
+            },
+            TableFieldSpec {
+                key: Symbol::new("y"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::String)),
+                required: false,
+            },
+        ],
+        TableExtraPolicy::Reject,
+    );
+    let unchecked_child = TableShape::new(
+        vec![TableFieldSpec {
+            key: Symbol::new("x"),
+            shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+            required: true,
+        }],
+        TableExtraPolicy::Allow,
+    );
+
+    assert!(shape_is_subshape_of(&mut cx, &rejecting_child, &parent).unwrap());
+    assert!(shape_is_subshape_of(&mut cx, &checked_child, &parent).unwrap());
+    assert!(!shape_is_subshape_of(&mut cx, &incompatible_child, &parent).unwrap());
+    assert!(!shape_is_subshape_of(&mut cx, &unchecked_child, &parent).unwrap());
+}
+
+#[test]
+fn table_child_only_key_must_fit_parent_shape_extra_policy() {
+    let mut cx = cx();
+    let parent = TableShape::new(
+        vec![TableFieldSpec {
+            key: Symbol::new("x"),
+            shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+            required: true,
+        }],
+        TableExtraPolicy::Shape(Arc::new(ExprKindShape::new(ExprKind::Number))),
+    );
+    let compatible_child = TableShape::new(
+        vec![
+            TableFieldSpec {
+                key: Symbol::new("x"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: true,
+            },
+            TableFieldSpec {
+                key: Symbol::new("y"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: true,
+            },
+        ],
+        TableExtraPolicy::Reject,
+    );
+    let incompatible_child = TableShape::new(
+        vec![
+            TableFieldSpec {
+                key: Symbol::new("x"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::Number)),
+                required: true,
+            },
+            TableFieldSpec {
+                key: Symbol::new("y"),
+                shape: Arc::new(ExprKindShape::new(ExprKind::String)),
+                required: true,
+            },
+        ],
+        TableExtraPolicy::Reject,
+    );
+
+    assert!(shape_is_subshape_of(&mut cx, &compatible_child, &parent).unwrap());
+    assert!(!shape_is_subshape_of(&mut cx, &incompatible_child, &parent).unwrap());
+}
+
+#[test]
+fn table_open_parent_policy_accepts_child_only_keys() {
+    let mut cx = cx();
+    let child = TableShape::new(
+        vec![TableFieldSpec {
+            key: Symbol::new("y"),
+            shape: Arc::new(ExprKindShape::new(ExprKind::String)),
+            required: true,
+        }],
+        TableExtraPolicy::Reject,
+    );
+    let parent = TableShape::new(Vec::new(), TableExtraPolicy::Allow);
+
+    assert!(shape_is_subshape_of(&mut cx, &child, &parent).unwrap());
 }
 
 #[test]

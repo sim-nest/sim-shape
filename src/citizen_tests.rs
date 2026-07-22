@@ -2,21 +2,21 @@ use std::sync::Arc;
 
 use sim_citizen::{CitizenLib, value_from_expr};
 use sim_kernel::{
-    CapabilitySet, Cx, DefaultFactory, Error, Expr, NoopEvalPolicy, ObjectEncoding, Symbol, Value,
-    read_construct_capability,
+    CapabilitySet, Cx, DefaultFactory, Error, Expr, NoopEvalPolicy, ObjectEncoding, Shape,
+    ShapeDoc, ShapeMatch, Symbol, Value, read_construct_capability,
 };
 
 use crate::{
     AcceptOnNoDiagnosticsHook, AndShape, AnyShape, ClassShape, DiscardOnDiagnosticPrefixHook,
-    ExactExprShape, ExprKind, ExprKindShape, HookedShape, ListShape, NotShape, OrShape,
-    RepeatShape, ScoreFloorHook, TableExtraPolicy, TableFieldSpec, TableShape, TraceMarkHook,
-    VennShapeSet, accept_on_no_diagnostics_hook_class_symbol, and_shape_class_symbol,
-    any_shape_class_symbol, class_shape_class_symbol,
-    discard_on_diagnostic_prefix_hook_class_symbol, exact_expr_shape_class_symbol,
-    expr_kind_shape_class_symbol, hook_value, hooked_shape_class_symbol, list_shape_class_symbol,
-    not_shape_class_symbol, or_shape_class_symbol, repeat_shape_class_symbol,
-    score_floor_hook_class_symbol, table_shape_class_symbol, trace_mark_hook_class_symbol,
-    venn_shape_set_class_symbol,
+    ExactExprShape, ExprKind, ExprKindShape, HookedShape, ListShape, MatchHook, MatchHookContext,
+    MatchHookDecision, MatchHookKind, MatchScore, NotShape, OrShape, RepeatShape, ScoreFloorHook,
+    TableExtraPolicy, TableFieldSpec, TableShape, TraceMarkHook, VennShapeSet,
+    accept_on_no_diagnostics_hook_class_symbol, and_shape_class_symbol, any_shape_class_symbol,
+    class_shape_class_symbol, discard_on_diagnostic_prefix_hook_class_symbol,
+    exact_expr_shape_class_symbol, expr_kind_shape_class_symbol, hook_value,
+    hooked_shape_class_symbol, list_shape_class_symbol, not_shape_class_symbol,
+    or_shape_class_symbol, repeat_shape_class_symbol, score_floor_hook_class_symbol,
+    table_shape_class_symbol, trace_mark_hook_class_symbol, venn_shape_set_class_symbol,
 };
 
 fn cx() -> Cx {
@@ -56,6 +56,84 @@ fn shape_accepts_expr(value: &Value, cx: &mut Cx, expr: Expr) -> bool {
         .check_expr(cx, &expr)
         .unwrap()
         .accepted
+}
+
+fn decoded_shape_accepts_expr(shape: &dyn Shape, cx: &mut Cx, expr: Expr) -> bool {
+    shape.check_expr(cx, &expr).unwrap().accepted
+}
+
+fn assert_supported_shape_decodes_from_bare_and_constructor_surfaces<T>(
+    shape: Arc<T>,
+    accepted_expr: Expr,
+) where
+    T: Shape + 'static,
+{
+    let mut cx = cx();
+    cx.grant(read_construct_capability());
+
+    let expected = crate::citizen::encode_shape_expr(shape.as_ref()).unwrap();
+
+    let bare_value = cx.factory().opaque(shape.clone()).unwrap();
+    let decoded_bare = crate::citizen::decode_shape_value(&mut cx, bare_value, "shape").unwrap();
+    assert_eq!(
+        crate::citizen::encode_shape_expr(decoded_bare.as_ref()).unwrap(),
+        expected
+    );
+    assert!(decoded_shape_accepts_expr(
+        decoded_bare.as_ref(),
+        &mut cx,
+        accepted_expr.clone()
+    ));
+
+    let constructor_value = value_from_expr(&mut cx, &expected).unwrap();
+    let decoded_constructor =
+        crate::citizen::decode_shape_value(&mut cx, constructor_value, "shape").unwrap();
+    assert_eq!(
+        crate::citizen::encode_shape_expr(decoded_constructor.as_ref()).unwrap(),
+        expected
+    );
+    assert!(decoded_shape_accepts_expr(
+        decoded_constructor.as_ref(),
+        &mut cx,
+        accepted_expr
+    ));
+}
+
+struct LiveShape;
+
+impl Shape for LiveShape {
+    fn check_value(&self, _cx: &mut Cx, _value: Value) -> sim_kernel::Result<ShapeMatch> {
+        Ok(ShapeMatch::accept(MatchScore::exact(1)))
+    }
+
+    fn check_expr(&self, _cx: &mut Cx, _expr: &Expr) -> sim_kernel::Result<ShapeMatch> {
+        Ok(ShapeMatch::accept(MatchScore::exact(1)))
+    }
+
+    fn describe(&self, _cx: &mut Cx) -> sim_kernel::Result<ShapeDoc> {
+        Ok(ShapeDoc::new("live shape"))
+    }
+}
+
+struct LiveHook;
+
+impl MatchHook for LiveHook {
+    fn symbol(&self) -> Symbol {
+        Symbol::qualified("shape", "live-hook")
+    }
+
+    fn kind(&self) -> MatchHookKind {
+        MatchHookKind::Mark
+    }
+
+    fn apply(
+        &self,
+        _cx: &mut Cx,
+        _ctx: &MatchHookContext,
+        _current: Option<&ShapeMatch>,
+    ) -> sim_kernel::Result<MatchHookDecision> {
+        Ok(MatchHookDecision::Pass)
+    }
 }
 
 fn shape_fixtures() -> Vec<(Symbol, Value, Expr)> {
@@ -354,6 +432,166 @@ fn hook_and_venn_citizens_use_constructor_forms() {
     let (class, args) = constructor(&venn, &mut cx);
     assert_eq!(class, venn_shape_set_class_symbol());
     assert_eq!(args.first(), Some(&Expr::Symbol(Symbol::new("v1"))));
+}
+
+#[test]
+fn supported_composite_shape_values_decode_from_bare_and_constructor_surfaces() {
+    assert_supported_shape_decodes_from_bare_and_constructor_surfaces(
+        Arc::new(TableShape::new(
+            vec![TableFieldSpec {
+                key: Symbol::new("ok"),
+                required: true,
+                shape: Arc::new(AnyShape),
+            }],
+            TableExtraPolicy::Reject,
+        )),
+        Expr::Map(vec![(Expr::Symbol(Symbol::new("ok")), Expr::Bool(true))]),
+    );
+    assert_supported_shape_decodes_from_bare_and_constructor_surfaces(
+        Arc::new(OrShape::new(vec![
+            Arc::new(ExactExprShape::new(Expr::Bool(false))),
+            Arc::new(ExactExprShape::new(Expr::Bool(true))),
+        ])),
+        Expr::Bool(true),
+    );
+    assert_supported_shape_decodes_from_bare_and_constructor_surfaces(
+        Arc::new(AndShape::new(vec![
+            Arc::new(AnyShape),
+            Arc::new(ExactExprShape::new(Expr::Bool(true))),
+        ])),
+        Expr::Bool(true),
+    );
+    assert_supported_shape_decodes_from_bare_and_constructor_surfaces(
+        Arc::new(NotShape::new(Arc::new(ExactExprShape::new(Expr::Bool(
+            false,
+        ))))),
+        Expr::Bool(true),
+    );
+    assert_supported_shape_decodes_from_bare_and_constructor_surfaces(
+        Arc::new(RepeatShape::with_bounds(Arc::new(AnyShape), 1, Some(2))),
+        Expr::Vector(vec![Expr::Bool(true)]),
+    );
+    assert_supported_shape_decodes_from_bare_and_constructor_surfaces(
+        Arc::new(HookedShape::new(
+            Arc::new(AnyShape),
+            vec![Arc::new(TraceMarkHook)],
+        )),
+        Expr::String("hooked".to_owned()),
+    );
+}
+
+#[test]
+fn venn_member_shapes_decode_from_bare_and_constructor_surfaces() {
+    let mut cx = cx();
+    cx.grant(read_construct_capability());
+
+    let table = Arc::new(TableShape::single(Symbol::new("ok"), Arc::new(AnyShape)));
+    let hooked = Arc::new(HookedShape::new(
+        Arc::new(AnyShape),
+        vec![Arc::new(TraceMarkHook)],
+    ));
+    let table_bare_member = cx
+        .factory()
+        .list(vec![
+            cx.factory().symbol(Symbol::new("table-bare")).unwrap(),
+            cx.factory().opaque(table.clone()).unwrap(),
+        ])
+        .unwrap();
+    let hooked_expr_value = value_from_expr(
+        &mut cx,
+        &crate::citizen::encode_shape_expr(hooked.as_ref()).unwrap(),
+    )
+    .unwrap();
+    let hooked_expr_member = cx
+        .factory()
+        .list(vec![
+            cx.factory().symbol(Symbol::new("hooked-expr")).unwrap(),
+            hooked_expr_value,
+        ])
+        .unwrap();
+
+    let members = cx
+        .factory()
+        .list(vec![table_bare_member, hooked_expr_member])
+        .unwrap();
+
+    let decoded = crate::citizen::decode_venn_members(&mut cx, members).unwrap();
+    let decoded_venn = cx
+        .factory()
+        .opaque(Arc::new(VennShapeSet::new(decoded.clone())))
+        .unwrap();
+    let (class, args) = constructor(&decoded_venn, &mut cx);
+    assert_eq!(class, venn_shape_set_class_symbol());
+    assert_eq!(
+        args,
+        vec![
+            Expr::Symbol(Symbol::new("v1")),
+            Expr::List(vec![
+                Expr::List(vec![
+                    Expr::Symbol(Symbol::new("table-bare")),
+                    crate::citizen::encode_shape_expr(table.as_ref()).unwrap(),
+                ]),
+                Expr::List(vec![
+                    Expr::Symbol(Symbol::new("hooked-expr")),
+                    crate::citizen::encode_shape_expr(hooked.as_ref()).unwrap(),
+                ]),
+            ]),
+        ]
+    );
+    assert!(decoded_shape_accepts_expr(
+        decoded[0].1.as_ref(),
+        &mut cx,
+        Expr::Map(vec![(Expr::Symbol(Symbol::new("ok")), Expr::Bool(true))]),
+    ));
+    assert!(decoded_shape_accepts_expr(
+        decoded[1].1.as_ref(),
+        &mut cx,
+        Expr::String("hooked".to_owned()),
+    ));
+}
+
+#[test]
+fn unsupported_live_shape_values_still_fail_closed() {
+    let mut cx = cx();
+    cx.grant(read_construct_capability());
+    let live_shape = cx.factory().opaque(Arc::new(LiveShape)).unwrap();
+
+    let err = match crate::citizen::decode_shape_value(&mut cx, live_shape, "shape") {
+        Ok(_) => panic!("unsupported live shapes must fail closed"),
+        Err(err) => err,
+    };
+
+    assert!(matches!(
+        err,
+        Error::Eval(message)
+            if message
+                == "citizen field shape: shape is not a citizen-supported pure descriptor"
+    ));
+}
+
+#[test]
+fn hooked_shape_bare_decode_requires_descriptor_backed_hooks() {
+    let mut cx = cx();
+    cx.grant(read_construct_capability());
+    let live_hooked = cx
+        .factory()
+        .opaque(Arc::new(HookedShape::new(
+            Arc::new(AnyShape),
+            vec![Arc::new(LiveHook)],
+        )))
+        .unwrap();
+
+    let err = match crate::citizen::decode_shape_value(&mut cx, live_hooked, "shape") {
+        Ok(_) => panic!("live hooks must fail closed during bare shape decoding"),
+        Err(err) => err,
+    };
+
+    assert!(matches!(
+        err,
+        Error::Eval(message)
+            if message
+                == "citizen field shape: shape hook shape/live-hook is not a pure descriptor citizen"
+    ));
 }
 
 #[test]

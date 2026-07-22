@@ -25,6 +25,13 @@ pub enum MatchHookKind {
     Annotate,
 }
 
+impl MatchHookKind {
+    /// Whether this hook kind leaves acceptance unchanged.
+    pub fn preserves_acceptance(self) -> bool {
+        matches!(self, Self::Mark | Self::Annotate)
+    }
+}
+
 /// Match target observed by a hook.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MatchHookTargetKind {
@@ -109,7 +116,8 @@ pub trait MatchHook: Send + Sync {
 /// Opaque runtime object that carries a shape hook.
 #[non_citizen(
     reason = "may wrap custom live hook code; built-in pure hook descriptors use shape/*Hook citizens",
-    kind = "function"
+    kind = "function",
+    descriptor = "shape/live-hook"
 )]
 #[derive(Clone)]
 pub struct MatchHookObject {

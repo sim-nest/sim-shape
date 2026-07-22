@@ -59,7 +59,7 @@ pub struct ShapeWitness {
     pub note: String,
 }
 
-/// Example value or expression used to gather relation evidence.
+/// Example value or expression that gathers relation evidence.
 #[derive(Clone, Debug)]
 pub enum ShapeProbe {
     /// Runtime value probe.

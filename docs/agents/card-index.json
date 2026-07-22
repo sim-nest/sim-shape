@@ -1,4 +1,17 @@
 {
   "schema": "sim.card-index.v1",
-  "cards": []
+  "cards": [
+    "recipes/01-basics/chapter.toml",
+    "recipes/01-basics/exact-bool-shape/Cargo.toml",
+    "recipes/01-basics/exact-bool-shape/README.md",
+    "recipes/01-basics/exact-bool-shape/expected.txt",
+    "recipes/01-basics/exact-bool-shape/recipe.toml",
+    "recipes/01-basics/exact-bool-shape/src/main.rs",
+    "recipes/01-basics/shape-grammar-contract/Cargo.toml",
+    "recipes/01-basics/shape-grammar-contract/README.md",
+    "recipes/01-basics/shape-grammar-contract/expected.txt",
+    "recipes/01-basics/shape-grammar-contract/recipe.toml",
+    "recipes/01-basics/shape-grammar-contract/src/main.rs",
+    "recipes/book.toml"
+  ]
 }

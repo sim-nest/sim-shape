@@ -1,0 +1,9 @@
+id = "shape-grammar-contract"
+title = "Shape grammar contract"
+codec = "rust"
+setup = "src/main.rs"
+purpose = "README.md"
+expected = "expected.txt"
+order = 20
+tags = ["shape", "grammar", "json-schema", "gbnf", "lisp", "rust"]
+requires = ["sim-shape", "sim-codec", "sim-codec-json", "sim-codec-lisp"]
