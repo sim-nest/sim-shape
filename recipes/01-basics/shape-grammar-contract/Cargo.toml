@@ -11,8 +11,8 @@ publish = false
 sim-codec = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
 sim-codec-json = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
 sim-codec-lisp = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
-sim-kernel = "0.1.0"
-sim-shape = "0.1.2"
+sim-kernel = "0.2.0"
+sim-shape = "0.2.0"
 sim-test-support = { git = "https://github.com/sim-nest/sim-codecs", rev = "fa820de9a8e0da83e3e4bb0e7c6e0ae0c392b758" }
 
 [lints]
