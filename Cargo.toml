@@ -26,6 +26,9 @@ homepage = "https://github.com/sim-nest/sim-shape"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 
+[patch.crates-io]
+sim-shape = { path = "." }
+
 [dependencies]
 sim-citizen = { version = "0.2.0" }
 sim-citizen-derive = { version = "0.2.0" }
