@@ -1,6 +1,6 @@
 [package]
 name = "sim-shape"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2024"
 license = "MPL-2.0"
 description = "Shape algebra, comparison, and match-hook helpers."
@@ -26,10 +26,13 @@ homepage = "https://github.com/sim-nest/sim-shape"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 
+[patch.crates-io]
+sim-shape = { path = "." }
+
 [dependencies]
-sim-citizen = { version = "0.1.0" }
-sim-citizen-derive = { version = "0.1.0" }
-sim-kernel = { version = "0.1.0" }
+sim-citizen = { version = "0.2.0" }
+sim-citizen-derive = { version = "0.2.0" }
+sim-kernel = { version = "0.2.0" }
 
 [dev-dependencies]
-sim-kernel = { version = "0.1.0", features = ["test-support"] }
+sim-kernel = { version = "0.2.0", features = ["test-support"] }
