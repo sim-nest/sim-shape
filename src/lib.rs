@@ -111,8 +111,9 @@ pub use diagnostics::{
     overload_selection_diagnostic,
 };
 pub use functions::{
-    FunctionCase, FunctionObject, NativeFunctionImpl, SelectedCase, ShapeObject, case_result_shape,
-    case_shape, function_cases, overload, shape_value, shape_value_with_encoding,
+    BrowseSignature, FunctionCase, FunctionObject, NativeFunctionImpl, SelectedCase, ShapeObject,
+    browse_signature, case_result_shape, case_shape, function_cases, overload, shape_value,
+    shape_value_with_encoding,
 };
 pub use grammar::{
     GrammarDialect, GrammarGraph, GrammarPosition, GrammarRenderer, GrammarTarget, Production,

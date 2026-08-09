@@ -16,10 +16,10 @@ frameworks = "advisory"
 [[feature]]
 id = "feature/sim-shape/shape"
 title = "Shape framework"
-summary = "Define reusable Shape matching, binding, citizen projection, and grammar contracts for runtime values."
+summary = "Define reusable Shape matching, binding, browse-only callable signatures, citizen projection, and grammar contracts for runtime values."
 owner = "crate/sim-shape"
 audiences = ["code", "framework"]
-guidance = "Use this row when a framework needs a reusable matcher or object-accessible shape contract."
+guidance = "Use this row when a framework needs a reusable matcher, object-accessible shape contract, or non-enforcing callable metadata consumed through the kernel browse slots. BrowseSignature preserves call and raw-call behavior; use FunctionObject only when Shape enforcement and overload selection are intended."
 claims_anchors = [
   "anchor/crate/sim-shape",
   "anchor/export/sim-shape/citizen/class.rs",
