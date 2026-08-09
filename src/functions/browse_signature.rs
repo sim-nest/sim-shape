@@ -137,7 +137,7 @@ mod tests {
         atomic::{AtomicUsize, Ordering},
     };
 
-    use sim_kernel::{DefaultFactory, Expr, HybridPolicy, Object, ObjectCompat, RawArgs, Symbol};
+    use sim_kernel::{Expr, Object, ObjectCompat, RawArgs, Symbol, testing::bare_cx as cx};
 
     use super::*;
     use crate::{
@@ -175,10 +175,6 @@ mod tests {
             self.raw_calls.fetch_add(1, Ordering::SeqCst);
             cx.factory().expr(Expr::List(args.into_exprs()))
         }
-    }
-
-    fn cx() -> Cx {
-        Cx::new(Arc::new(HybridPolicy), Arc::new(DefaultFactory))
     }
 
     fn specimen(cx: &mut Cx) -> (Value, Arc<AtomicUsize>, Arc<AtomicUsize>) {
