@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+mod browse_signature;
 mod demand;
 mod select;
 mod shape_object;
@@ -17,6 +18,7 @@ use sim_kernel::{
 
 use crate::base::{Bindings, Shape, ShapeMatch};
 use crate::primitives::OneOfShape;
+pub use browse_signature::{BrowseSignature, browse_signature};
 pub use shape_object::{ShapeObject, shape_value, shape_value_with_encoding};
 
 /// Native implementation backing a single [`FunctionCase`].
