@@ -54,6 +54,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: sim-nest/sim-tooling
+          # Keep standalone CI reproducible. A moving tooling checkout can make
+          # an unchanged repository fail after its exact head was validated.
+          ref: 8770efdf4426c4348fe3a52d5bb6598188e59851
           path: sim-tooling
       - id: toolchain
         shell: bash
