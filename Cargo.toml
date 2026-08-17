@@ -1,6 +1,6 @@
 [package]
 name = "sim-shape"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 license = "MPL-2.0"
 description = "Shape algebra, comparison, and match-hook helpers."
@@ -32,7 +32,7 @@ sim-shape = { path = "." }
 [dependencies]
 sim-citizen = { version = "0.2.0" }
 sim-citizen-derive = { version = "0.2.0" }
-sim-kernel = { version = "0.2.0" }
+sim-kernel = { version = "0.2.1" }
 
 [dev-dependencies]
-sim-kernel = { version = "0.2.0", features = ["test-support"] }
+sim-kernel = { version = "0.2.1", features = ["test-support"] }
