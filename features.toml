@@ -22,11 +22,6 @@ audiences = ["code", "framework"]
 guidance = "Use this row when a framework needs a reusable matcher, object-accessible shape contract, or non-enforcing callable metadata consumed through the kernel browse slots. BrowseSignature preserves call and raw-call behavior; use FunctionObject only when Shape enforcement and overload selection are intended."
 claims_anchors = [
   "anchor/crate/sim-shape",
-  "anchor/export/sim-shape/citizen/class.rs",
-  "anchor/export/sim-shape/citizen/codec.rs",
-  "anchor/export/sim-shape/citizen/construct.rs",
-  "anchor/export/sim-shape/citizen/inventory.rs",
-  "anchor/export/sim-shape/citizen/recursive_codec.rs",
   "anchor/export/sim-shape/shape/accept-on-no-diagnostics-hook",
   "anchor/export/sim-shape/shape/and",
   "anchor/export/sim-shape/shape/any",
