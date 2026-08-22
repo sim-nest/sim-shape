@@ -67,7 +67,7 @@ title = "Shape contract emitter"
 summary = "Emit generated repository contract and index fragments for Shape crates."
 owner = "crate/xtask"
 audiences = ["code"]
-guidance = "Use this row when refreshing generated Shape contract evidence."
+guidance = "Use this host-tool row when refreshing generated Shape contract evidence; it is OS/HW-neutral and remains outside every product closure."
 claims_anchors = [
   "anchor/crate/xtask",
 ]
