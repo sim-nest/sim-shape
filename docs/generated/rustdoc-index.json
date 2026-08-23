@@ -2,6 +2,13 @@
   "generator": "xtask repo-contract v1",
   "packages": [
     {
+      "crate_name": "sim_relation_shape",
+      "group": "workspace",
+      "manifest": "crates/sim-relation-shape/Cargo.toml",
+      "package": "sim-relation-shape",
+      "summary": "Runtime Shape(sim_kernel::Shape) projection for relational records."
+    },
+    {
       "crate_name": "sim_shape",
       "group": "workspace",
       "manifest": "Cargo.toml",

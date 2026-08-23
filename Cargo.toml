@@ -12,6 +12,7 @@ homepage = "https://github.com/sim-nest/sim-shape"
 [workspace]
 resolver = "3"
 members = [
+  "crates/sim-relation-shape",
   "recipes/01-basics/exact-bool-shape",
   "recipes/01-basics/shape-grammar-contract",
   "xtask",
@@ -28,6 +29,10 @@ unsafe_code = "forbid"
 
 [patch.crates-io]
 sim-shape = { path = "." }
+sim-relation-core = { path = "../sim-foundation/crates/sim-relation-core" }
+sim-relation-schema = { path = "../sim-foundation/crates/sim-relation-schema" }
+sim-relation-plan = { path = "../sim-foundation/crates/sim-relation-plan" }
+sim-relation-migrate = { path = "../sim-foundation/crates/sim-relation-migrate" }
 
 [dependencies]
 sim-citizen = { version = "0.2.0" }
