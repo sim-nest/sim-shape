@@ -86,7 +86,7 @@ pub enum ShapeProbe {
 /// # use sim_shape::{
 /// #     ExactExprShape, ExprKind, ExprKindShape, ShapeRelationKind, relate_shapes,
 /// # };
-/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0xf9cb_e4cb_ad5a_f54f));
 /// let exact_true = ExactExprShape::new(Expr::Bool(true));
 /// let bool_expr = ExprKindShape::new(ExprKind::Bool);
 /// let relation = relate_shapes(&mut cx, &exact_true, &bool_expr, &[]).unwrap();

@@ -6,7 +6,11 @@ use sim_relation_shape::{CellShape, RecordKind, RecordShape, construct_record};
 use sim_shape::{ExprKind, ExprKindShape, Shape, shape_value};
 
 fn cx() -> Cx {
-    Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory))
+    Cx::new(
+        Arc::new(NoopEvalPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(0x5245_4c54),
+    )
 }
 
 #[test]

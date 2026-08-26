@@ -12,7 +12,7 @@
 //! use sim_relation_shape::CellShape;
 //! use sim_shape::{ExprKind, ExprKindShape, Shape, shape_value};
 //!
-//! let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x9a23_bd50_1795_40c5));
 //! let shape_symbol = Symbol::qualified("example", "UuidShape");
 //! let shape = shape_value(shape_symbol.clone(), Arc::new(ExprKindShape::new(ExprKind::String)));
 //! cx.registry_mut().register_shape_value(shape_symbol.clone(), shape).unwrap();

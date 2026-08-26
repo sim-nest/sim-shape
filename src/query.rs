@@ -55,7 +55,11 @@ mod tests {
     use crate::{AnyShape, ExprKind, ExprKindShape, ShapeQueryRelation, shape_query_matches};
 
     fn bare_cx() -> Cx {
-        Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory))
+        Cx::new(
+            Arc::new(NoopEvalPolicy),
+            Arc::new(DefaultFactory),
+            sim_kernel::HandleSeed::new(0x5348_5101),
+        )
     }
 
     #[test]

@@ -24,6 +24,21 @@ fn class_shape_checks_runtime_class() {
 }
 
 #[test]
+fn class_shape_accepts_citizen_read_construct_expression() {
+    let mut cx = cx();
+    let shape = ClassShape::new(Symbol::qualified("agent", "RunFrame"));
+    let expr = Expr::Extension {
+        tag: Symbol::qualified("citizen", "read-construct"),
+        payload: Box::new(Expr::Vector(vec![
+            Expr::Symbol(Symbol::qualified("agent", "RunFrame")),
+            Expr::Symbol(Symbol::new("v1")),
+        ])),
+    };
+
+    assert!(shape.check_expr(&mut cx, &expr).unwrap().accepted);
+}
+
+#[test]
 fn object_expr_roundtrips() {
     let expr = ObjectExpr {
         class: Symbol::new("Point"),

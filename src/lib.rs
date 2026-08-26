@@ -15,7 +15,7 @@
 //!     ShapeRelationKind, TraceMarkHook, relate_shapes,
 //! };
 //!
-//! let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+//! let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x5f36_998e_7903_82e3));
 //! let exact_true = ExactExprShape::new(Expr::Bool(true));
 //! let bool_expr = ExprKindShape::new(ExprKind::Bool);
 //! let relation = relate_shapes(&mut cx, &exact_true, &bool_expr, &[]).unwrap();

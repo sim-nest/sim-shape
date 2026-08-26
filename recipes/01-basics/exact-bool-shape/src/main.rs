@@ -4,7 +4,11 @@ use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy, Symbol};
 use sim_shape::{ExactExprShape, Shape, check_shape_on_expr, parse_shape_expr};
 
 fn main() -> sim_kernel::Result<()> {
-    let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+    let mut cx = Cx::new(
+        Arc::new(NoopEvalPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(0x7afc_700c_9caf_b972),
+    );
     let shape = ExactExprShape::new(Expr::Bool(true));
 
     let accepted = shape.check_expr(&mut cx, &Expr::Bool(true))?.accepted;

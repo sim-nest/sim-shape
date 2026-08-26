@@ -4,6 +4,7 @@
 
 | Package | Group | Summary |
 | --- | --- | --- |
+| `sim-relation-shape` | `workspace` | Runtime Shape(sim_kernel::Shape) projection for relational records. |
 | `sim-shape` | `workspace` | Shape algebra, comparison, and match-hook helpers. |
 | `sim-shape-recipe-exact-bool-shape` | `workspace` | Runnable exact boolean shape cookbook recipe. |
 | `sim-shape-recipe-shape-grammar-contract` | `workspace` | Runnable Shape grammar contract cookbook recipe. |

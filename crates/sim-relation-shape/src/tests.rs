@@ -10,7 +10,11 @@ use crate::CellShape;
 
 #[test]
 fn custom_domain_binding_accepts_text_and_rejects_shape_mismatch() {
-    let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+    let mut cx = Cx::new(
+        Arc::new(NoopEvalPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(0x5245_4c53),
+    );
     let symbol = Symbol::qualified("specimen", "UuidShape");
     cx.registry_mut()
         .register_shape_value(
