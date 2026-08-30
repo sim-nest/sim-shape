@@ -14,15 +14,15 @@ policy = "rustdoc"
 reason = "The custom-domain binding specimen is checked in crate rustdoc and integration tests."
 
 [dependencies]
-sim-kernel = { version = "0.2.1" }
+sim-kernel = { version = "0.3.0" }
 sim-relation-core = { version = "0.1.0" }
 sim-relation-schema = { version = "0.1.0" }
 sim-relation-plan = { version = "0.1.0" }
 sim-relation-migrate = { version = "0.1.0" }
-sim-shape = { version = "0.2.4", path = "../.." }
+sim-shape = { version = "0.3.0", path = "../.." }
 
 [dev-dependencies]
-sim-kernel = { version = "0.2.1", features = ["test-support"] }
+sim-kernel = { version = "0.3.0", features = ["test-support"] }
 
 [lints]
 workspace = true
