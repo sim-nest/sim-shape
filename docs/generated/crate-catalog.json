@@ -1,6 +1,6 @@
 {
   "generator": "xtask crate-catalog v1",
-  "package_count": 4,
+  "package_count": 5,
   "packages": [
     {
       "description": "Shape algebra, comparison, and match-hook helpers.",
@@ -12,6 +12,19 @@
       "root": ".",
       "target_kinds": [
         "lib"
+      ]
+    },
+    {
+      "description": "Shape projection and runtime admission for SIM relational records.",
+      "generated_readme": false,
+      "manifest": "crates/sim-relation-shape/Cargo.toml",
+      "name": "sim-relation-shape",
+      "publish": "true",
+      "readme": "crates/sim-relation-shape/README.md",
+      "root": "crates/sim-relation-shape",
+      "target_kinds": [
+        "lib",
+        "test"
       ]
     },
     {

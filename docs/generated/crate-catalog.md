@@ -7,6 +7,7 @@ Generated from Cargo metadata by `xtask crate-catalog v1`.
 | Package | Publish | Targets | Description |
 | --- | --- | --- | --- |
 | `sim-shape` | `true` | `lib` | Shape algebra, comparison, and match-hook helpers. |
+| `sim-relation-shape` | `true` | `lib, test` | Shape projection and runtime admission for SIM relational records. |
 | `sim-shape-recipe-exact-bool-shape` | `false` | `bin` | Runnable exact boolean shape cookbook recipe. |
 | `sim-shape-recipe-shape-grammar-contract` | `false` | `bin` | Runnable Shape grammar contract cookbook recipe. |
 | `xtask` | `false` | `bin` | SIM workspace package for xtask. |
