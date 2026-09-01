@@ -208,7 +208,11 @@ mod tests {
     fn recursive_shape_accepts_exprs_and_values_within_depth_bound() {
         let shape = node_shape();
         let expr = list_expr(MAX_SHAPE_DEPTH - 1);
-        let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+        let mut cx = Cx::new(
+            Arc::new(NoopEvalPolicy),
+            Arc::new(DefaultFactory),
+            sim_kernel::HandleSeed::new(0x5348_5201),
+        );
 
         assert!(shape.check_expr(&mut cx, &expr).unwrap().accepted);
 
@@ -220,7 +224,11 @@ mod tests {
     fn recursive_shape_rejects_when_depth_budget_is_spent() {
         let shape = node_shape();
         let expr = list_expr(MAX_SHAPE_DEPTH);
-        let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+        let mut cx = Cx::new(
+            Arc::new(NoopEvalPolicy),
+            Arc::new(DefaultFactory),
+            sim_kernel::HandleSeed::new(0x5348_5202),
+        );
         let matched = shape.check_expr(&mut cx, &expr).unwrap();
 
         assert!(!matched.accepted);
@@ -238,7 +246,11 @@ mod tests {
             Arc::new(ShapeDefRef::new(Symbol::new("Missing"))),
             Vec::new(),
         );
-        let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+        let mut cx = Cx::new(
+            Arc::new(NoopEvalPolicy),
+            Arc::new(DefaultFactory),
+            sim_kernel::HandleSeed::new(0x5348_5203),
+        );
         let matched = shape.check_expr(&mut cx, &Expr::Nil).unwrap();
 
         assert!(!matched.accepted);
@@ -263,7 +275,11 @@ mod tests {
 
     #[test]
     fn recursive_shape_roundtrips_through_read_construct() {
-        let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+        let mut cx = Cx::new(
+            Arc::new(NoopEvalPolicy),
+            Arc::new(DefaultFactory),
+            sim_kernel::HandleSeed::new(0x5348_5204),
+        );
         cx.load_lib(&CitizenLib::all()).unwrap();
         cx.grant(read_construct_capability());
         let node = Symbol::new("Node");

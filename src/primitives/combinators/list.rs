@@ -20,7 +20,7 @@ use crate::diagnostics::{expected_shape_diagnostic, expr_actual_label};
 /// use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// use sim_shape::{ExprKind, ExprKindShape, ListShape, Shape};
 ///
-/// let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x8749_b66f_9e77_d33f));
 /// let shape = ListShape::new(vec![Arc::new(ExprKindShape::new(ExprKind::String))]);
 /// let expr = Expr::List(vec![Expr::String("hi".to_owned())]);
 /// assert!(shape.check_expr(&mut cx, &expr).unwrap().accepted);

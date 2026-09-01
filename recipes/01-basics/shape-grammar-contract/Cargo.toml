@@ -8,12 +8,12 @@ readme = "README.md"
 publish = false
 
 [dependencies]
-sim-codec = { git = "https://github.com/sim-nest/sim-codecs", rev = "68f760f2f7366374717e9a741ac16a12b0261ec4" }
-sim-codec-json = { git = "https://github.com/sim-nest/sim-codecs", rev = "68f760f2f7366374717e9a741ac16a12b0261ec4" }
-sim-codec-lisp = { git = "https://github.com/sim-nest/sim-codecs", rev = "68f760f2f7366374717e9a741ac16a12b0261ec4" }
-sim-kernel = "0.2.0"
-sim-shape = { path = "../../..", version = "0.2.0" }
-sim-test-support = { git = "https://github.com/sim-nest/sim-codecs", rev = "68f760f2f7366374717e9a741ac16a12b0261ec4" }
+sim-codec = { git = "https://github.com/sim-nest/sim-codecs", rev = "b131e6c929fce333791d56afb763586e225ae97a" }
+sim-codec-json = { git = "https://github.com/sim-nest/sim-codecs", rev = "b131e6c929fce333791d56afb763586e225ae97a" }
+sim-codec-lisp = { git = "https://github.com/sim-nest/sim-codecs", rev = "b131e6c929fce333791d56afb763586e225ae97a" }
+sim-kernel = "0.3.0"
+sim-shape = { path = "../../..", version = "0.3.0" }
+sim-test-support = { git = "https://github.com/sim-nest/sim-codecs", rev = "b131e6c929fce333791d56afb763586e225ae97a" }
 
 [lints]
 workspace = true

@@ -23,7 +23,7 @@ use crate::{
 /// # use std::sync::Arc;
 /// # use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// # use sim_shape::{AnyShape, HookedShape, Shape, TraceMarkHook};
-/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x69ad_4122_2a0b_c53a));
 /// let shape = HookedShape::new(Arc::new(AnyShape), vec![Arc::new(TraceMarkHook)]);
 /// let matched = shape.check_expr(&mut cx, &Expr::Bool(true)).unwrap();
 ///

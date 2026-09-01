@@ -22,7 +22,7 @@ use crate::{
 /// # use std::sync::Arc;
 /// # use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy, Symbol};
 /// # use sim_shape::{ExprKind, ExprKindShape, Shape, TableShape};
-/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x80da_2511_06c9_8d20));
 /// let shape = TableShape::single(
 ///     Symbol::new("ok"),
 ///     Arc::new(ExprKindShape::new(ExprKind::Bool)),
@@ -174,7 +174,7 @@ impl Shape for TableShape {
 /// # use std::sync::Arc;
 /// # use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// # use sim_shape::{ExprKind, ExprKindShape, RepeatShape, Shape};
-/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x662f_4083_3bc5_4ea8));
 /// let shape = RepeatShape::with_bounds(
 ///     Arc::new(ExprKindShape::new(ExprKind::Bool)),
 ///     1,

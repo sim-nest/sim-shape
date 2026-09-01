@@ -22,11 +22,6 @@ audiences = ["code", "framework"]
 guidance = "Use this row when a framework needs a reusable matcher, object-accessible shape contract, or non-enforcing callable metadata consumed through the kernel browse slots. BrowseSignature preserves call and raw-call behavior; use FunctionObject only when Shape enforcement and overload selection are intended."
 claims_anchors = [
   "anchor/crate/sim-shape",
-  "anchor/export/sim-shape/citizen/class.rs",
-  "anchor/export/sim-shape/citizen/codec.rs",
-  "anchor/export/sim-shape/citizen/construct.rs",
-  "anchor/export/sim-shape/citizen/inventory.rs",
-  "anchor/export/sim-shape/citizen/recursive_codec.rs",
   "anchor/export/sim-shape/shape/accept-on-no-diagnostics-hook",
   "anchor/export/sim-shape/shape/and",
   "anchor/export/sim-shape/shape/any",
@@ -72,9 +67,31 @@ title = "Shape contract emitter"
 summary = "Emit generated repository contract and index fragments for Shape crates."
 owner = "crate/xtask"
 audiences = ["code"]
-guidance = "Use this row when refreshing generated Shape contract evidence."
+guidance = "Use this host-tool row when refreshing generated Shape contract evidence; it is OS/HW-neutral and remains outside every product closure."
 claims_anchors = [
   "anchor/crate/xtask",
+]
+supports = [
+  "feature/sim-shape/shape",
+]
+
+[[feature]]
+id = "feature/sim-shape/relation-shape"
+title = "Relational Shape projection"
+summary = "Resolve open relational domains through Cx and project cells, rows, schemas, plans, migrations, bindings, and receipts as native inspectable Shape-bearing records."
+owner = "crate/sim-relation-shape"
+audiences = ["code", "framework"]
+guidance = "Extend this framework for relational admission and binding. Keep domains as sim-relation-core data, resolve their declared Shape refs through Cx, and keep checked seals and live handles outside pure constructors; do not add a relation-private matcher or type registry."
+claims_anchors = [
+  "anchor/crate/sim-relation-shape",
+  "anchor/rustdoc/sim-relation-shape/cell-shape",
+  "anchor/rustdoc/sim-relation-shape/record-shape",
+  "anchor/rustdoc/sim-relation-shape/row-shape",
+  "anchor/rustdoc/sim-relation-shape/construct_record",
+  "anchor/rustdoc/sim-relation-shape/resolve_domain_shape",
+]
+claims_specimens = [
+  "spec-test/sim-shape/crates/sim-relation-shape/src/tests",
 ]
 supports = [
   "feature/sim-shape/shape",
@@ -97,4 +114,14 @@ audiences = ["code"]
 steps = [
   { feature = "feature/sim-shape/shape-recipes", why = "The recipe row owns standalone Shape example crates." },
   { feature = "feature/sim-shape/shape", why = "The Shape row owns the contract the recipe demonstrates." },
+]
+
+[[route]]
+id = "route/bind-relational-domain"
+task = "Bind a relational value through Shape"
+audiences = ["code", "framework"]
+steps = [
+  { feature = "feature/sim-shape/relation-shape", why = "The relation adapter resolves DomainSpec Shape refs through Cx and owns cell/row binding." },
+  { feature = "feature/sim-shape/shape", why = "The shared Shape protocol remains the only matcher and binder." },
+  { specimen = "spec-test/sim-shape/crates/sim-relation-shape/src/tests", why = "The checked specimen binds a custom UUID-over-text domain and rejects a boolean mismatch." },
 ]

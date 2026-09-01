@@ -5,7 +5,11 @@ use sim_kernel::{DefaultFactory, Expr, NoopEvalPolicy, NumberLiteral, Symbol};
 use crate::{Shape, parse_shape_expr};
 
 fn cx() -> sim_kernel::Cx {
-    sim_kernel::Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory))
+    sim_kernel::Cx::new(
+        Arc::new(NoopEvalPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(0x5348_5001),
+    )
 }
 
 fn number_expr(text: &str) -> Expr {

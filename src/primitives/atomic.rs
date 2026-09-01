@@ -20,7 +20,7 @@ use sim_kernel::{Cx, Expr, Result, ShapeRef, Symbol, Value};
 /// use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// use sim_shape::{AnyShape, Shape};
 ///
-/// let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x89cc_e38d_7bf2_f559));
 /// let matched = AnyShape.check_expr(&mut cx, &Expr::Bool(true)).unwrap();
 /// assert!(matched.accepted);
 /// assert!(AnyShape.is_total());
@@ -252,6 +252,14 @@ impl Shape for ClassShape {
     }
 
     fn check_expr(&self, cx: &mut Cx, expr: &Expr) -> Result<ShapeMatch> {
+        if let Expr::Extension { tag, payload } = expr
+            && *tag == Symbol::qualified("citizen", "read-construct")
+            && let Expr::Vector(items) = payload.as_ref()
+            && let Some(Expr::Symbol(class)) = items.first()
+            && class_symbol_matches(cx, class, &self.symbol)?
+        {
+            return Ok(ShapeMatch::accept(MatchScore::exact(25)));
+        }
         match expr {
             Expr::Symbol(symbol) if class_symbol_matches(cx, symbol, &self.symbol)? => {
                 Ok(ShapeMatch::accept(MatchScore::exact(20)))
@@ -321,7 +329,7 @@ impl Shape for ClassShape {
 /// use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// use sim_shape::{ExactExprShape, Shape};
 ///
-/// let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x21e4_455d_fb33_faa7));
 /// let shape = ExactExprShape::new(Expr::Bool(true));
 /// assert!(shape.check_expr(&mut cx, &Expr::Bool(true)).unwrap().accepted);
 /// assert!(!shape.check_expr(&mut cx, &Expr::Bool(false)).unwrap().accepted);

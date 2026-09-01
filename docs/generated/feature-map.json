@@ -4,6 +4,11 @@
     {
       "features": [],
       "group": "workspace",
+      "package": "sim-relation-shape"
+    },
+    {
+      "features": [],
+      "group": "workspace",
       "package": "sim-shape"
     },
     {

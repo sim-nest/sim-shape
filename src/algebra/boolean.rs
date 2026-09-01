@@ -19,7 +19,7 @@ use crate::{
 /// # use std::sync::Arc;
 /// # use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// # use sim_shape::{AndShape, AnyShape, ExprKind, ExprKindShape, Shape};
-/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0xe73c_e182_a825_6b74));
 /// let shape = AndShape::new(vec![
 ///     Arc::new(AnyShape),
 ///     Arc::new(ExprKindShape::new(ExprKind::Bool)),
@@ -149,7 +149,7 @@ pub enum OrStrategy {
 /// # use std::sync::Arc;
 /// # use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// # use sim_shape::{ExprKind, ExprKindShape, OrShape, Shape};
-/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x1df4_b9ac_7e55_94d7));
 /// let shape = OrShape::new(vec![
 ///     Arc::new(ExprKindShape::new(ExprKind::Bool)),
 ///     Arc::new(ExprKindShape::new(ExprKind::String)),
@@ -238,7 +238,7 @@ impl Shape for OrShape {
 /// # use std::sync::Arc;
 /// # use sim_kernel::{Cx, DefaultFactory, Expr, NoopEvalPolicy};
 /// # use sim_shape::{ExprKind, ExprKindShape, NotShape, Shape};
-/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory));
+/// # let mut cx = Cx::new(Arc::new(NoopEvalPolicy), Arc::new(DefaultFactory), sim_kernel::HandleSeed::new(0x02dd_b1c7_f2d2_1fb1));
 /// let shape = NotShape::new(Arc::new(ExprKindShape::new(ExprKind::Bool)));
 ///
 /// assert!(shape

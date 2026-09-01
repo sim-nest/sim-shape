@@ -12,7 +12,11 @@ use crate::{
 };
 
 fn hybrid_cx() -> Cx {
-    Cx::new(Arc::new(HybridPolicy), Arc::new(DefaultFactory))
+    Cx::new(
+        Arc::new(HybridPolicy),
+        Arc::new(DefaultFactory),
+        sim_kernel::HandleSeed::new(0x5348_4601),
+    )
 }
 
 fn number_expr(text: &str) -> Expr {

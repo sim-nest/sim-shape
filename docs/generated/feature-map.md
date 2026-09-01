@@ -4,6 +4,7 @@
 
 | Package | Group | Features | Workspace feature edges |
 | --- | --- | ---: | ---: |
+| `sim-relation-shape` | `workspace` | 0 | 0 |
 | `sim-shape` | `workspace` | 0 | 0 |
 | `sim-shape-recipe-exact-bool-shape` | `workspace` | 0 | 0 |
 | `sim-shape-recipe-shape-grammar-contract` | `workspace` | 0 | 0 |
