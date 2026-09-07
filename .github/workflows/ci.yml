@@ -56,7 +56,7 @@ jobs:
           repository: sim-nest/sim-tooling
           # Keep standalone CI reproducible. A moving tooling checkout can make
           # an unchanged repository fail after its exact head was validated.
-          ref: 4fc031db3c843044116dbf8306f112a778ed1605
+          ref: 7f21202fd8d509313ae11f6fd2ee6dbdf47e1468
           path: sim-tooling
       - id: toolchain
         shell: bash
