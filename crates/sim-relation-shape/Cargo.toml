@@ -1,6 +1,6 @@
 [package]
 name = "sim-relation-shape"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MPL-2.0"
 description = "Shape projection and runtime admission for SIM relational records."
@@ -19,7 +19,7 @@ sim-relation-core = { version = "0.2.0" }
 sim-relation-schema = { version = "0.2.0" }
 sim-relation-plan = { version = "0.2.0" }
 sim-relation-migrate = { version = "0.2.0" }
-sim-shape = { version = "0.4.0", path = "../.." }
+sim-shape = { version = "0.4.2", path = "../.." }
 
 [dev-dependencies]
 sim-kernel = { version = "0.4.0", features = ["test-support"] }
