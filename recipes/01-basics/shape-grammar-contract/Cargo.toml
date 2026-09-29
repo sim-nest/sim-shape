@@ -12,7 +12,7 @@ sim-codec = { version = "0.3.0" }
 sim-codec-json = { version = "0.4.0" }
 sim-codec-lisp = { version = "0.4.0" }
 sim-kernel = "0.4.0"
-sim-shape = { path = "../../..", version = "0.4.0" }
+sim-shape = { path = "../../..", version = "0.4.2" }
 sim-test-support = { version = "0.1.4" }
 
 [lints]
