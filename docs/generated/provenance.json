@@ -1,28 +1,42 @@
 {
   "api_docs": "target/doc/",
-  "generated_by": "cargo run -p xtask -- simdoc",
-  "generation_timestamp": "2026-07-12T17:21:11+02:00",
+  "execution": {
+    "executable": {
+      "lock_sha256": "de3cf584352514646909797b8454326e8ba4d3d90bf87ed7c3592ae971073678",
+      "package": "simdoc",
+      "source_sha256": "2d07e74da21f25de3089f711cd5451a9c66c7d49e2959882aad21406416671ca",
+      "version": "0.1.0"
+    },
+    "operation": "repo-contract --repo .",
+    "resolver": null,
+    "toolchain": {
+      "cargo": {
+        "commit_hash": "30a34c6821b57de0aaec83a901aca39f88f6778c",
+        "release": "1.96.0"
+      },
+      "rustc": {
+        "commit_hash": "ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96",
+        "release": "1.96.0"
+      }
+    }
+  },
+  "generation_timestamp": "2026-09-29T20:46:07+02:00",
   "generator": "xtask repo-contract v1",
-  "git_commit": "d1350fb797de8afb938a30114eb3cdb0929e436b",
+  "git_commit": "26ce4ba7c0b2a7c7d6825c3a7f060a8f52fd5587",
+  "regeneration_command": "cargo run -p xtask -- simdoc",
   "repo": "sim-shape",
   "schema": "sim.provenance.v1",
-  "source_commit": "d1350fb797de8afb938a30114eb3cdb0929e436b",
+  "source_commit": "26ce4ba7c0b2a7c7d6825c3a7f060a8f52fd5587",
   "source_remote": "https://github.com/sim-nest/sim-shape",
   "validation_commands": [
-    "cargo fmt --all --check",
-    "cargo test",
-    "cargo clippy --all-targets -- -D warnings",
-    "cargo doc --no-deps",
-    "cargo run -p xtask -- simdoc --check",
-    "cargo run -p xtask -- check-file-sizes",
-    "cargo run -p xtask -- repo-contract --check --repo .",
-    "cargo run -p xtask -- validation-matrix --check --repo .",
-    "cargo run -p xtask -- crate-catalog --check --repo ."
+    "cargo run -p xtask -- simdoc --check"
   ],
-  "workspace_hash": "3824848936e88a41",
+  "workspace_hash": "fc59f7326d537516",
   "workspace_hash_algorithm": "fnv1a64",
-  "workspace_hash_input_count": 68,
+  "workspace_hash_input_count": 73,
   "workspace_hash_inputs": [
+    ".github/workflows/authorship.yml",
+    ".github/workflows/ci.yml",
     "Cargo.toml",
     "crates/sim-relation-shape/Cargo.toml",
     "crates/sim-relation-shape/src/lib.rs",
@@ -33,8 +47,10 @@
     "features.toml",
     "recipes/01-basics/exact-bool-shape/Cargo.toml",
     "recipes/01-basics/exact-bool-shape/recipe.toml",
+    "recipes/01-basics/exact-bool-shape/src/main.rs",
     "recipes/01-basics/shape-grammar-contract/Cargo.toml",
     "recipes/01-basics/shape-grammar-contract/recipe.toml",
+    "recipes/01-basics/shape-grammar-contract/src/main.rs",
     "recipes/book.toml",
     "src/algebra/boolean.rs",
     "src/algebra/collection.rs",
@@ -90,6 +106,7 @@
     "src/tests/list.rs",
     "src/tests/object.rs",
     "src/tests.rs",
-    "xtask/Cargo.toml"
+    "xtask/Cargo.toml",
+    "xtask/src/main.rs"
   ]
 }

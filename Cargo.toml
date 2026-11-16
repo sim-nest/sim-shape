@@ -27,6 +27,9 @@ homepage = "https://github.com/sim-nest/sim-shape"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 
+[workspace.metadata.sim]
+docs-command = "cargo run -p xtask -- simdoc"
+
 [patch.crates-io]
 sim-shape = { path = "." }
 
